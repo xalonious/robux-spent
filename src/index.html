@@ -1,0 +1,603 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Robux Spent</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      :root{
+        --bg0:#0b0f1a;
+        --card:#121a2ecc;
+        --text:#e8ecff;
+        --muted:#a9b2dd;
+        --muted2:#7f8ac0;
+        --good:#37d67a;
+        --warn:#ffb020;
+        --bad:#ff4d6d;
+        --shadow: 0 24px 60px rgba(0,0,0,.45);
+      }
+
+      body{
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+        background: var(--bg0);
+        color: var(--text);
+        min-height: 100vh;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding: 20px;
+      }
+
+      .shell{
+        width: min(1100px, 100%);
+        display:grid;
+        grid-template-columns: 1.25fr .9fr;
+        gap: 18px;
+      }
+
+      .panel{
+        background: var(--card);
+        border: 1px solid rgba(255,255,255,.06);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .header{
+        padding: 22px 22px 18px;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+        display:flex;
+        align-items:flex-start;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .title h1{
+        font-size: 22px;
+        letter-spacing:.2px;
+        margin-bottom: 6px;
+      }
+      .title p{
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .pill{
+        display:inline-flex;
+        align-items:center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.06);
+        color: var(--muted);
+        font-size: 13px;
+        white-space:nowrap;
+      }
+      .dot{
+        width: 9px; height: 9px; border-radius: 50%;
+        background: var(--good);
+        box-shadow: 0 0 0 4px rgba(55,214,122,.12);
+      }
+      .dot.working{
+        background: var(--warn);
+        box-shadow: 0 0 0 4px rgba(255,176,32,.16);
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+      .dot.error{
+        background: var(--bad);
+        box-shadow: 0 0 0 4px rgba(255,77,109,.16);
+      }
+      @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+
+      .body{ padding: 18px 22px 22px; }
+
+      .label{
+        font-size: 13px;
+        color: var(--muted);
+        margin: 18px 0 10px;
+        font-weight: 700;
+        letter-spacing:.15px;
+      }
+      .label:first-child{ margin-top: 0; }
+
+      .fileBox{
+        display:flex;
+        align-items:center;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .fileName{
+        flex: 1;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.06);
+        color: var(--muted);
+        font-size: 13px;
+        overflow:hidden;
+        text-overflow: ellipsis;
+        white-space:nowrap;
+      }
+
+      button{
+        border: 0;
+        cursor: pointer;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-weight: 700;
+        color: #0a0d18;
+        background: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
+        box-shadow: 0 10px 26px rgba(124,92,255,.22);
+        transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+      }
+      button:hover:not(:disabled){ transform: translateY(-1px); filter: brightness(1.03); }
+      button:active:not(:disabled){ transform: translateY(0px); filter: brightness(.98); }
+      button:disabled{ opacity:.45; cursor:not-allowed; }
+
+      .primary{
+        width:100%;
+        padding: 14px 16px;
+        border-radius: 16px;
+        font-size: 15px;
+      }
+
+      .progressWrap{
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.06);
+        background: rgba(255,255,255,.03);
+      }
+      .bar{
+        height: 10px;
+        background: rgba(255,255,255,.06);
+        border-radius: 999px;
+        overflow:hidden;
+      }
+      .fill{
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, rgba(124,92,255,1), rgba(34,211,238,1));
+        transition: width .25s ease;
+      }
+      .progressText{
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+        display:flex;
+        align-items:center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .chip{
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.07);
+        background: rgba(255,255,255,.04);
+        color: var(--muted);
+        white-space:nowrap;
+      }
+      .chip.warn{ border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.10); color: #ffd28d; }
+      .chip.good{ border-color: rgba(55,214,122,.35); background: rgba(55,214,122,.10); color: #a6ffd0; }
+      .chip.bad{ border-color: rgba(255,77,109,.35); background: rgba(255,77,109,.10); color: #ffb7c3; }
+
+      .grid{
+        display:grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .card{
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.06);
+        border-radius: 16px;
+        padding: 14px;
+      }
+      .k{
+        font-size: 12px;
+        color: var(--muted2);
+        margin-bottom: 7px;
+        font-weight: 800;
+        letter-spacing:.2px;
+      }
+      .v{
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing:.2px;
+      }
+
+      .logBody{ padding: 12px 12px 14px; }
+      .log{
+        height: 560px;
+        overflow:auto;
+        padding: 12px;
+        background: rgba(0,0,0,.18);
+        border-top: 1px solid rgba(255,255,255,.06);
+        border-bottom: 1px solid rgba(255,255,255,.06);
+      }
+      .logLine{
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        line-height: 1.45;
+        color: rgba(232,236,255,.92);
+        padding: 6px 8px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.05);
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .logLine.muted{ color: rgba(169,178,221,.95); }
+      .logLine.warn{ border-color: rgba(255,176,32,.28); background: rgba(255,176,32,.08); }
+      .logLine.error{ border-color: rgba(255,77,109,.30); background: rgba(255,77,109,.08); }
+      .logLine.ok{ border-color: rgba(55,214,122,.28); background: rgba(55,214,122,.07); }
+
+      .logFooter{
+        padding: 12px;
+        display:flex;
+        gap: 10px;
+        align-items:center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .linkish{
+        cursor:pointer;
+        user-select:none;
+        color: #c9d2ff;
+        text-decoration: underline;
+        text-decoration-color: rgba(201,210,255,.35);
+      }
+
+      @media (max-width: 960px){
+        .shell{ grid-template-columns: 1fr; }
+        .log{ height: 360px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="panel">
+        <div class="header">
+          <div class="title">
+            <h1>Robux Spent</h1>
+            <p>Pick a <b>cookie.txt</b> containing only your <code>.ROBLOSECURITY</code> value, then scan your purchase history.</p>
+          </div>
+          <div class="pill" id="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Ready</span>
+          </div>
+        </div>
+
+        <div class="body">
+          <div class="label">Cookie file</div>
+          <div class="fileBox">
+            <button id="pick">Select File</button>
+            <div class="fileName" id="fileName">No file selected</div>
+          </div>
+
+          <div style="height: 14px"></div>
+          <button class="primary" id="scan" disabled>Scan Purchases</button>
+
+          <div class="progressWrap" id="progressSection" style="display:none;">
+            <div class="bar"><div class="fill" id="progressFill"></div></div>
+            <div class="progressText">
+              <span id="progressText">Starting…</span>
+              <span class="chip" id="progressChip" style="display:none;">—</span>
+            </div>
+          </div>
+
+          <div id="statsSection" style="display:none;">
+            <div class="label">Robux spent</div>
+            <div class="grid">
+              <div class="card"><div class="k">Total spent</div><div class="v" id="totalSpent">R$0</div></div>
+              <div class="card"><div class="k">Purchases</div><div class="v" id="purchaseCount">0</div></div>
+              <div class="card"><div class="k">In games</div><div class="v" id="gameSpent">R$0</div></div>
+              <div class="card"><div class="k">Other</div><div class="v" id="otherSpent">R$0</div></div>
+            </div>
+
+            <div class="label">Estimated USD (1000 Robux = $10)</div>
+            <div class="grid">
+              <div class="card"><div class="k">Robux bought</div><div class="v" id="robuxBoughtUSD">$0.00</div></div>
+              <div class="card"><div class="k">Premium stipend</div><div class="v" id="premiumUSD">$0.00</div></div>
+              <div class="card"><div class="k">Total USD estimate</div><div class="v" id="totalUSD">$0.00</div></div>
+              <div class="card"><div class="k">Total Robux acquired</div><div class="v" id="totalAcquiredRobux">0</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="header">
+          <div class="title">
+            <h1 style="font-size:18px;">Live log</h1>
+            <p>Shows status messages (including rate limits) as they happen.</p>
+          </div>
+          <div class="pill">
+            <span class="dot" style="background:rgba(232,236,255,.35); box-shadow:none;"></span>
+            <span id="logCount">0 lines</span>
+          </div>
+        </div>
+
+        <div class="logBody">
+          <div class="log" id="log"></div>
+          <div class="logFooter">
+            <span id="hint">Log output</span>
+            <span class="linkish" id="clearLog">Clear</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let cookiePath = null;
+      let scanning = false;
+      let cookieValidated = false;
+
+      const pickBtn = document.getElementById("pick");
+      const scanBtn = document.getElementById("scan");
+      const fileName = document.getElementById("fileName");
+
+      const statusText = document.getElementById("statusText");
+      const statusDot = document.getElementById("statusDot");
+
+      const progressSection = document.getElementById("progressSection");
+      const progressFill = document.getElementById("progressFill");
+      const progressText = document.getElementById("progressText");
+      const progressChip = document.getElementById("progressChip");
+
+      const statsSection = document.getElementById("statsSection");
+
+      const logEl = document.getElementById("log");
+      const logCountEl = document.getElementById("logCount");
+      const clearLogBtn = document.getElementById("clearLog");
+
+      let logLines = 0;
+      let rlTimer = null;
+      let rlUntil = 0;
+      let inRateLimitMode = false;
+
+      function fmt(n){ return (n ?? 0).toLocaleString(); }
+      function fmtRobux(n){ return `R$${fmt(n)}`; }
+      function fmtUSD(n){
+        const v = Number(n ?? 0);
+        return `$${v.toFixed(2)}`;
+      }
+
+      function setStatus(text, mode){
+        statusText.textContent = text;
+        statusDot.classList.remove("working","error");
+        if (mode === "working") statusDot.classList.add("working");
+        if (mode === "error") statusDot.classList.add("error");
+      }
+
+      function setProgress(pct, text, chipText = null, chipKind = null){
+        progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+        progressText.textContent = text;
+
+        if (chipText){
+          progressChip.style.display = "inline-flex";
+          progressChip.textContent = chipText;
+          progressChip.classList.remove("warn","good","bad");
+          if (chipKind) progressChip.classList.add(chipKind);
+        } else {
+          progressChip.style.display = "none";
+        }
+      }
+
+      function showStats(totals, purchaseCount){
+        document.getElementById("totalSpent").textContent = fmtRobux(totals.totalSpentAllPurchases);
+        document.getElementById("purchaseCount").textContent = fmt(purchaseCount);
+        document.getElementById("gameSpent").textContent = fmtRobux(totals.totalSpentInGames);
+        document.getElementById("otherSpent").textContent = fmtRobux(totals.totalSpentOutsideGames);
+
+        const acq = totals.acquisition || {};
+        document.getElementById("robuxBoughtUSD").textContent = fmtUSD(acq?.robuxPurchases?.usdEstimate ?? 0);
+        document.getElementById("premiumUSD").textContent = fmtUSD(acq?.premium?.usdEstimate ?? 0);
+        document.getElementById("totalUSD").textContent = fmtUSD(acq?.total?.usdEstimate ?? 0);
+        document.getElementById("totalAcquiredRobux").textContent = fmt(acq?.total?.robux ?? 0);
+
+        statsSection.style.display = "block";
+      }
+
+      function appendLog(msg, meta = {}, ts = Date.now()){
+        const t = new Date(ts);
+        const hh = String(t.getHours()).padStart(2,"0");
+        const mm = String(t.getMinutes()).padStart(2,"0");
+        const ss = String(t.getSeconds()).padStart(2,"0");
+
+        const line = document.createElement("div");
+        line.className = "logLine";
+
+        const lvl = (meta.level || "").toLowerCase();
+        if (lvl) line.classList.add(lvl);
+
+        if (meta.kind === "ratelimit") line.classList.add("warn");
+        if (meta.kind === "retry") line.classList.add("warn");
+        if (meta.kind === "checkpoint" || meta.kind === "checkpoint-resume") line.classList.add("muted");
+
+        line.textContent = `[${hh}:${mm}:${ss}] ${msg}`;
+        logEl.appendChild(line);
+
+        logLines++;
+        logCountEl.textContent = `${logLines} line${logLines===1?"":"s"}`;
+
+        const nearBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 120);
+        if (nearBottom) logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function stopRateLimitCountdown(){
+        if (rlTimer) clearInterval(rlTimer);
+        rlTimer = null;
+        rlUntil = 0;
+        inRateLimitMode = false;
+      }
+
+      function startRateLimitCountdown(delayMs){
+        if (typeof delayMs !== "number" || !isFinite(delayMs) || delayMs <= 0) return;
+        if (rlTimer) clearInterval(rlTimer);
+        rlUntil = Date.now() + delayMs;
+        inRateLimitMode = true;
+
+        const tick = () => {
+          if (!inRateLimitMode) return;
+          const left = Math.max(0, rlUntil - Date.now());
+          const ms = Math.ceil(left);
+          if (ms <= 0){
+            stopRateLimitCountdown();
+            return;
+          }
+          setStatus("Rate limited", "working");
+          setProgress(
+            Math.max(5, parseFloat(progressFill.style.width) || 5),
+            `Ratelimited. Retrying in ${ms.toLocaleString()} ms…`,
+            "429",
+            "warn"
+          );
+        };
+
+        tick();
+        rlTimer = setInterval(tick, 120);
+      }
+
+      function hardClearRateLimit(){
+        stopRateLimitCountdown();
+        if (scanning) setStatus("Scanning…", "working");
+      }
+
+      function parseLocaleNumber(s){
+        const cleaned = String(s).replace(/[^\d]/g, "");
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      clearLogBtn.addEventListener("click", () => {
+        logEl.innerHTML = "";
+        logLines = 0;
+        logCountEl.textContent = "0 lines";
+      });
+
+      window.api.onProgress(({ msg, meta, ts }) => {
+        appendLog(msg, meta, ts);
+
+        if (/^Fetched\s/i.test(msg)) {
+          hardClearRateLimit();
+        }
+
+        if (meta?.status === 429 || meta?.kind === "ratelimit") {
+          if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
+        } else if (inRateLimitMode) {
+          hardClearRateLimit();
+        }
+
+        const m = /^Fetched\s([\d.,\s]+)\s+Purchase\s+tx\s+\(page\s+(\d+)\)/i.exec(msg);
+        if (m) {
+          const count = parseLocaleNumber(m[1]);
+          const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
+          setStatus("Scanning…", "working");
+          setProgress(pct, `Scanned ${count.toLocaleString()} purchases`, `${count.toLocaleString()}`, "good");
+        } else if (/Authenticating/i.test(msg)) {
+          hardClearRateLimit();
+          setStatus("Scanning…", "working");
+          setProgress(3, "Authenticating…");
+        } else if (/Authenticated/i.test(msg)) {
+          hardClearRateLimit();
+          setStatus("Scanning…", "working");
+          setProgress(6, "Authenticated. Scanning…");
+        } else if (/Computing totals/i.test(msg)) {
+          hardClearRateLimit();
+          setStatus("Scanning…", "working");
+          setProgress(97, "Computing totals…", "finalizing", null);
+        } else if (/Done/i.test(msg)) {
+          stopRateLimitCountdown();
+          setStatus("Complete");
+          setProgress(100, "Complete", "done", "good");
+        } else if (/Error:/i.test(msg)) {
+          stopRateLimitCountdown();
+          setStatus("Error", "error");
+          setProgress(0, "Failed", "error", "bad");
+        }
+      });
+
+      pickBtn.addEventListener("click", async () => {
+        const res = await window.api.pickCookieFile();
+
+        cookieValidated = false;
+        scanBtn.disabled = true;
+
+        if (!res.ok) {
+          fileName.textContent = "No file selected";
+          cookiePath = null;
+          setStatus("Ready");
+          return;
+        }
+
+        cookiePath = res.path;
+        fileName.textContent = cookiePath.split(/[\\/]/).pop();
+        appendLog(`Selected cookie file: ${fileName.textContent}`, { level: "muted" });
+
+        setStatus("Validating…", "working");
+        progressSection.style.display = "block";
+        setProgress(2, "Validating cookie…");
+
+        const v = await window.api.validateCookie({ cookiePath });
+
+        if (!v.ok) {
+          cookieValidated = false;
+          scanBtn.disabled = true;
+          setStatus("Invalid cookie", "error");
+          setProgress(0, `Invalid cookie: ${v.error}`, "invalid", "bad");
+          appendLog(`Cookie invalid: ${v.error}`, { level: "error" });
+          return;
+        }
+
+        cookieValidated = true;
+        scanBtn.disabled = false;
+        setStatus("Cookie OK");
+        setProgress(0, "Ready to scan", "ok", "good");
+      });
+
+      scanBtn.addEventListener("click", async () => {
+        if (!cookiePath || scanning || !cookieValidated) return;
+
+        scanning = true;
+        pickBtn.disabled = true;
+        scanBtn.disabled = true;
+        statsSection.style.display = "none";
+        progressSection.style.display = "block";
+
+        stopRateLimitCountdown();
+        setStatus("Scanning…", "working");
+        setProgress(0, "Starting…");
+        appendLog("Scan started.", { level: "muted" });
+
+        const res = await window.api.scanSpend({ cookiePath });
+
+        scanning = false;
+        pickBtn.disabled = false;
+        scanBtn.disabled = false;
+
+        stopRateLimitCountdown();
+
+        if (!res.ok) {
+          setStatus("Error", "error");
+          setProgress(0, "Failed", "error", "bad");
+          appendLog(`Scan failed: ${res.error}`, { level: "error" });
+          return;
+        }
+
+        setStatus("Complete");
+        setProgress(100, "Complete", "done", "good");
+
+        showStats(res.totals, res.purchasesCount);
+        appendLog(`Saved results to: ${res.dataDir}`, { level: "ok" });
+      });
+    </script>
+  </body>
+</html>
