@@ -1,274 +1,462 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Robux Spent</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      :root{
-        --bg0:#0b0f1a;
-        --card:#121a2ecc;
-        --text:#e8ecff;
-        --muted:#a9b2dd;
-        --muted2:#7f8ac0;
-        --good:#37d67a;
-        --warn:#ffb020;
-        --bad:#ff4d6d;
-        --shadow: 0 24px 60px rgba(0,0,0,.45);
-      }
+  <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --bg0:#0b0f1a;
+    --card:#121a2ecc;
+    --text:#e8ecff;
+    --muted:#a9b2dd;
+    --muted2:#7f8ac0;
+    --good:#37d67a;
+    --warn:#ffb020;
+    --bad:#ff4d6d;
+    --shadow: 0 24px 60px rgba(0,0,0,.45);
+  }
 
-      body{
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
-        background: var(--bg0);
-        color: var(--text);
-        min-height: 100vh;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding: 20px;
-      }
+  html, body { overflow-x: hidden; }
 
-      .shell{
-        width: min(1100px, 100%);
-        display:grid;
-        grid-template-columns: 1.25fr .9fr;
-        gap: 18px;
-      }
+  body{
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+    background: var(--bg0);
+    color: var(--text);
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+  }
 
-      .panel{
-        background: var(--card);
-        border: 1px solid rgba(255,255,255,.06);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-      }
+  .shell{
+    width: min(clamp(1100px, 92vw, 1500px), 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    gap: 18px;
+  }
 
-      .header{
-        padding: 22px 22px 18px;
-        border-bottom: 1px solid rgba(255,255,255,.06);
-        display:flex;
-        align-items:flex-start;
-        justify-content: space-between;
-        gap: 14px;
-      }
+  .shell > .panel{ min-width: 0; }
 
-      .title h1{
-        font-size: 22px;
-        letter-spacing:.2px;
-        margin-bottom: 6px;
-      }
-      .title p{
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.35;
-      }
+  .panel{
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
 
-      .pill{
-        display:inline-flex;
-        align-items:center;
-        gap: 10px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(255,255,255,.06);
-        color: var(--muted);
-        font-size: 13px;
-        white-space:nowrap;
-      }
-      .dot{
-        width: 9px; height: 9px; border-radius: 50%;
-        background: var(--good);
-        box-shadow: 0 0 0 4px rgba(55,214,122,.12);
-      }
-      .dot.working{
-        background: var(--warn);
-        box-shadow: 0 0 0 4px rgba(255,176,32,.16);
-        animation: pulse 1.2s ease-in-out infinite;
-      }
-      .dot.error{
-        background: var(--bad);
-        box-shadow: 0 0 0 4px rgba(255,77,109,.16);
-      }
-      @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+  .header{
+    padding: 22px 22px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display:flex;
+    align-items:flex-start;
+    justify-content: space-between;
+    gap: 14px;
+  }
 
-      .body{ padding: 18px 22px 22px; }
+  .title h1{
+    font-size: 22px;
+    letter-spacing:.2px;
+    margin-bottom: 6px;
+  }
+  .title p{
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.35;
+  }
 
-      .label{
-        font-size: 13px;
-        color: var(--muted);
-        margin: 18px 0 10px;
-        font-weight: 700;
-        letter-spacing:.15px;
-      }
-      .label:first-child{ margin-top: 0; }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    color: var(--muted);
+    font-size: 13px;
+    white-space:nowrap;
+  }
 
-      .fileBox{
-        display:flex;
-        align-items:center;
-        gap: 12px;
-        width: 100%;
-      }
+  .dot{
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 4px rgba(55,214,122,.12);
+  }
+  .dot.working{
+    background: var(--warn);
+    box-shadow: 0 0 0 4px rgba(255,176,32,.16);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot.error{
+    background: var(--bad);
+    box-shadow: 0 0 0 4px rgba(255,77,109,.16);
+  }
+  .dotMuted{
+    background:rgba(232,236,255,.35) !important;
+    box-shadow:none !important;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
 
-      .fileName{
-        flex: 1;
-        padding: 12px 14px;
-        border-radius: 14px;
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(255,255,255,.06);
-        color: var(--muted);
-        font-size: 13px;
-        overflow:hidden;
-        text-overflow: ellipsis;
-        white-space:nowrap;
-      }
+  .body{ padding: 18px 22px 22px; }
 
-      button{
-        border: 0;
-        cursor: pointer;
-        padding: 12px 14px;
-        border-radius: 14px;
-        font-weight: 700;
-        color: #0a0d18;
-        background: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
-        box-shadow: 0 10px 26px rgba(124,92,255,.22);
-        transition: transform .12s ease, filter .12s ease, opacity .12s ease;
-      }
-      button:hover:not(:disabled){ transform: translateY(-1px); filter: brightness(1.03); }
-      button:active:not(:disabled){ transform: translateY(0px); filter: brightness(.98); }
-      button:disabled{ opacity:.45; cursor:not-allowed; }
+  .label{
+    font-size: 13px;
+    color: var(--muted);
+    margin: 18px 0 10px;
+    font-weight: 700;
+    letter-spacing:.15px;
+  }
+  .label:first-child{ margin-top: 0; }
 
-      .primary{
-        width:100%;
-        padding: 14px 16px;
-        border-radius: 16px;
-        font-size: 15px;
-      }
+  .spacer{ height: 14px; }
 
-      .progressWrap{
-        margin-top: 14px;
-        padding: 14px;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,.06);
-        background: rgba(255,255,255,.03);
-      }
-      .bar{
-        height: 10px;
-        background: rgba(255,255,255,.06);
-        border-radius: 999px;
-        overflow:hidden;
-      }
-      .fill{
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, rgba(124,92,255,1), rgba(34,211,238,1));
-        transition: width .25s ease;
-      }
-      .progressText{
-        margin-top: 10px;
-        font-size: 13px;
-        color: var(--muted);
-        display:flex;
-        align-items:center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      .chip{
-        font-size: 12px;
-        padding: 5px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,.07);
-        background: rgba(255,255,255,.04);
-        color: var(--muted);
-        white-space:nowrap;
-      }
-      .chip.warn{ border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.10); color: #ffd28d; }
-      .chip.good{ border-color: rgba(55,214,122,.35); background: rgba(55,214,122,.10); color: #a6ffd0; }
-      .chip.bad{ border-color: rgba(255,77,109,.35); background: rgba(255,77,109,.10); color: #ffb7c3; }
+  .fileBox{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    width: 100%;
+  }
 
-      .grid{
-        display:grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-      }
-      .card{
-        background: rgba(255,255,255,.03);
-        border: 1px solid rgba(255,255,255,.06);
-        border-radius: 16px;
-        padding: 14px;
-      }
-      .k{
-        font-size: 12px;
-        color: var(--muted2);
-        margin-bottom: 7px;
-        font-weight: 800;
-        letter-spacing:.2px;
-      }
-      .v{
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing:.2px;
-      }
+  .fileName{
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.06);
+    color: var(--muted);
+    font-size: 13px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space:nowrap;
+    min-width: 0; 
+  }
 
-      .logBody{ padding: 12px 12px 14px; }
-      .log{
-        height: 560px;
-        overflow:auto;
-        padding: 12px;
-        background: rgba(0,0,0,.18);
-        border-top: 1px solid rgba(255,255,255,.06);
-        border-bottom: 1px solid rgba(255,255,255,.06);
-      }
-      .logLine{
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        font-size: 12px;
-        line-height: 1.45;
-        color: rgba(232,236,255,.92);
-        padding: 6px 8px;
-        border-radius: 10px;
-        margin-bottom: 6px;
-        background: rgba(255,255,255,.03);
-        border: 1px solid rgba(255,255,255,.05);
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-      .logLine.muted{ color: rgba(169,178,221,.95); }
-      .logLine.warn{ border-color: rgba(255,176,32,.28); background: rgba(255,176,32,.08); }
-      .logLine.error{ border-color: rgba(255,77,109,.30); background: rgba(255,77,109,.08); }
-      .logLine.ok{ border-color: rgba(55,214,122,.28); background: rgba(55,214,122,.07); }
+  button{
+    border: 0;
+    cursor: pointer;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    color: #0a0d18;
+    background: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
+    box-shadow: 0 10px 26px rgba(124,92,255,.22);
+    transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+  }
+  button:hover:not(:disabled){ transform: translateY(-1px); filter: brightness(1.03); }
+  button:active:not(:disabled){ transform: translateY(0px); filter: brightness(.98); }
+  button:disabled{ opacity:.45; cursor:not-allowed; }
 
-      .logFooter{
-        padding: 12px;
-        display:flex;
-        gap: 10px;
-        align-items:center;
-        justify-content: space-between;
-        color: var(--muted);
-        font-size: 12px;
-      }
-      .linkish{
-        cursor:pointer;
-        user-select:none;
-        color: #c9d2ff;
-        text-decoration: underline;
-        text-decoration-color: rgba(201,210,255,.35);
-      }
+  .primary{
+    width:100%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+  }
 
-      @media (max-width: 960px){
-        .shell{ grid-template-columns: 1fr; }
-        .log{ height: 360px; }
-      }
-    </style>
+  .progressWrap{
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(255,255,255,.03);
+  }
+  .bar{
+    height: 10px;
+    background: rgba(255,255,255,.06);
+    border-radius: 999px;
+    overflow:hidden;
+  }
+  .fill{
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(124,92,255,1), rgba(34,211,238,1));
+    transition: width .25s ease;
+  }
+  .progressText{
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .chip{
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.04);
+    color: var(--muted);
+    white-space:nowrap;
+  }
+  .chip.warn{ border-color: rgba(255,176,32,.35); background: rgba(255,176,32,.10); color: #ffd28d; }
+  .chip.good{ border-color: rgba(55,214,122,.35); background: rgba(55,214,122,.10); color: #a6ffd0; }
+  .chip.bad{ border-color: rgba(255,77,109,.35); background: rgba(255,77,109,.10); color: #ffb7c3; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .card{
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .k{
+    font-size: 12px;
+    color: var(--muted2);
+    margin-bottom: 7px;
+    font-weight: 800;
+    letter-spacing:.2px;
+  }
+  .v{
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing:.2px;
+  }
+  .subv{
+    margin-top: 6px;
+    font-size: 12px;
+    color: rgba(169,178,221,.95);
+    letter-spacing: .15px;
+  }
+
+  .badgeRow{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin: 2px 0 8px;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .15px;
+    border: 1px solid rgba(255,176,32,.35);
+    background: rgba(255,176,32,.12);
+    color: #ffe2b3;
+    user-select:none;
+  }
+  .badgeMeta{
+    font-size: 12px;
+    color: rgba(201,210,255,.86);
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space:nowrap;
+    min-width: 0;
+  }
+
+  .chartPanel{
+    margin-top: 6px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(255,255,255,.03);
+    overflow: hidden;
+  }
+
+  .chartHeader{
+    padding: 12px 12px 10px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+
+  .segmented{
+    display:inline-flex;
+    align-items:center;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.14);
+  }
+  .segBtn{
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: rgba(232,236,255,.86);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .12px;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background .12s ease, filter .12s ease, transform .12s ease;
+  }
+  .segBtn:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+  .segBtn:active{ transform: translateY(0px); }
+  .segBtn[aria-selected="true"]{
+    background: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
+    color: #0a0d18;
+  }
+
+  .toggleGroup{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .toggle{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.12);
+    color: rgba(232,236,255,.86);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .12px;
+    user-select:none;
+  }
+  .toggle input{
+    accent-color: rgba(124,92,255,1);
+    transform: translateY(1px);
+  }
+
+  .chartWrap{
+    position: relative;
+    padding: 14px 12px 12px 12px;
+    background: rgba(0,0,0,.14);
+    border-top: 1px solid rgba(255,255,255,.03);
+  }
+
+  #spendChart{
+    width: 100%;
+    height: 320px;
+    display:block;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 14px;
+  }
+
+  .chartEmpty{
+    position:absolute;
+    inset: 14px 12px 12px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: rgba(169,178,221,.95);
+    font-size: 13px;
+    border-radius: 14px;
+    background: rgba(0,0,0,.14);
+    border: 1px dashed rgba(255,255,255,.16);
+    pointer-events:none;
+  }
+
+  .chartFooter{
+    padding: 10px 12px 12px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    color: rgba(169,178,221,.95);
+    font-size: 12px;
+  }
+
+  .chartLegend{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  .legendSwatch{
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(124,92,255,1), rgba(34,211,238,1));
+    box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+  }
+  .chartHint{
+    color: rgba(169,178,221,.8);
+  }
+
+  .logBody{ padding: 12px 12px 14px; }
+
+  .log{
+    height: clamp(260px, 55vh, 560px);
+    overflow:auto;
+    padding: 12px;
+    background: rgba(0,0,0,.18);
+    border-top: 1px solid rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .logLine{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(232,236,255,.92);
+    padding: 6px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.05);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .logLine.muted{ color: rgba(169,178,221,.95); }
+  .logLine.warn{ border-color: rgba(255,176,32,.28); background: rgba(255,176,32,.08); }
+  .logLine.error{ border-color: rgba(255,77,109,.30); background: rgba(255,77,109,.08); }
+  .logLine.ok{ border-color: rgba(55,214,122,.28); background: rgba(55,214,122,.07); }
+
+  .logFooter{
+    padding: 12px;
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .linkish{
+    cursor:pointer;
+    user-select:none;
+    color: #c9d2ff;
+    text-decoration: underline;
+    text-decoration-color: rgba(201,210,255,.35);
+  }
+
+  .logTitle{ font-size:18px; }
+
+
+  @media (max-width: 1080px){
+    .shell{ grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 960px){
+    .log{ height: clamp(220px, 45vh, 360px); }
+    #spendChart{ height: 300px; }
+  }
+</style>
   </head>
+
   <body>
     <div class="shell">
       <div class="panel">
         <div class="header">
           <div class="title">
             <h1>Robux Spent</h1>
-            <p>Pick a <b>cookie.txt</b> containing only your <code>.ROBLOSECURITY</code> value, then scan your purchase history.</p>
+            <p>
+              Pick a <b>cookie.txt</b> containing only your <code>.ROBLOSECURITY</code> value, then scan your purchase
+              history.
+            </p>
           </div>
+
           <div class="pill" id="status">
             <span class="dot" id="statusDot"></span>
             <span id="statusText">Ready</span>
@@ -282,32 +470,130 @@
             <div class="fileName" id="fileName">No file selected</div>
           </div>
 
-          <div style="height: 14px"></div>
+          <div class="spacer"></div>
+
           <button class="primary" id="scan" disabled>Scan Purchases</button>
 
-          <div class="progressWrap" id="progressSection" style="display:none;">
+          <div class="progressWrap" id="progressSection" style="display: none;">
             <div class="bar"><div class="fill" id="progressFill"></div></div>
             <div class="progressText">
               <span id="progressText">Starting…</span>
-              <span class="chip" id="progressChip" style="display:none;">—</span>
+              <span class="chip" id="progressChip" style="display: none;">—</span>
             </div>
           </div>
 
-          <div id="statsSection" style="display:none;">
+          <div id="statsSection" style="display: none;">
             <div class="label">Robux spent</div>
             <div class="grid">
-              <div class="card"><div class="k">Total spent</div><div class="v" id="totalSpent">R$0</div></div>
-              <div class="card"><div class="k">Purchases</div><div class="v" id="purchaseCount">0</div></div>
-              <div class="card"><div class="k">In games</div><div class="v" id="gameSpent">R$0</div></div>
-              <div class="card"><div class="k">Other</div><div class="v" id="otherSpent">R$0</div></div>
+              <div class="card">
+                <div class="k">Total spent</div>
+                <div class="v" id="totalSpent">R$0</div>
+              </div>
+              <div class="card">
+                <div class="k">Purchases</div>
+                <div class="v" id="purchaseCount">0</div>
+              </div>
+              <div class="card">
+                <div class="k">In games</div>
+                <div class="v" id="gameSpent">R$0</div>
+              </div>
+              <div class="card">
+                <div class="k">Other</div>
+                <div class="v" id="otherSpent">R$0</div>
+              </div>
             </div>
 
             <div class="label">Estimated USD (1000 Robux = $10)</div>
             <div class="grid">
-              <div class="card"><div class="k">Robux bought</div><div class="v" id="robuxBoughtUSD">$0.00</div></div>
-              <div class="card"><div class="k">Premium stipend</div><div class="v" id="premiumUSD">$0.00</div></div>
-              <div class="card"><div class="k">Total USD estimate</div><div class="v" id="totalUSD">$0.00</div></div>
-              <div class="card"><div class="k">Total Robux acquired</div><div class="v" id="totalAcquiredRobux">0</div></div>
+              <div class="card">
+                <div class="k">Robux bought</div>
+                <div class="v" id="robuxBoughtUSD">$0.00</div>
+              </div>
+              <div class="card">
+                <div class="k">Premium stipend</div>
+                <div class="v" id="premiumUSD">$0.00</div>
+              </div>
+              <div class="card">
+                <div class="k">Total USD estimate</div>
+                <div class="v" id="totalUSD">$0.00</div>
+              </div>
+              <div class="card">
+                <div class="k">Total Robux acquired</div>
+                <div class="v" id="totalAcquiredRobux">0</div>
+              </div>
+            </div>
+
+            <div class="label">Insights</div>
+            <div class="grid">
+              <div class="card">
+                <div class="k">Average per month</div>
+                <div class="v" id="avgPerMonth">R$0</div>
+                <div class="subv" id="avgPerMonthUSD">$0.00</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Average per year</div>
+                <div class="v" id="avgPerYear">R$0</div>
+                <div class="subv" id="avgPerYearUSD">$0.00</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Average per purchase</div>
+                <div class="v" id="avgPerPurchase">R$0</div>
+                <div class="subv" id="avgPerPurchaseUSD">$0.00</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Peak spending month</div>
+
+                <div class="badgeRow">
+                  <span class="badge" id="peakBadge" title="😬 Peak spending month">
+                    😬 Peak
+                  </span>
+                  <span class="badgeMeta" id="peakMonthLabel">—</span>
+                </div>
+
+                <div class="v" id="peakMonthRobux">R$0</div>
+                <div class="subv" id="peakMonthUSD">$0.00</div>
+              </div>
+            </div>
+
+            <div class="label">Spending over time</div>
+
+            <div class="chartPanel" aria-label="Spending over time chart">
+              <div class="chartHeader">
+                <div class="segmented" role="tablist" aria-label="Chart range">
+                  <button class="segBtn" id="granMonth" type="button" aria-selected="true">Monthly</button>
+                  <button class="segBtn" id="granYear" type="button" aria-selected="false">Yearly</button>
+                </div>
+
+                <div class="toggleGroup" aria-label="Metric toggle">
+                  <label class="toggle">
+                    <input type="radio" name="metric" id="metricRobux" value="robux" checked />
+                    <span>Robux</span>
+                  </label>
+                  <label class="toggle">
+                    <input type="radio" name="metric" id="metricUSD" value="usd" />
+                    <span>USD</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="chartWrap">
+                <canvas id="spendChart" width="980" height="320"></canvas>
+
+                <div class="chartEmpty" id="chartEmpty" style="display: none;">
+                  No spend data to chart yet.
+                </div>
+              </div>
+
+              <div class="chartFooter">
+                <div class="chartLegend">
+                  <span class="legendSwatch" aria-hidden="true"></span>
+                  <span id="chartLegendLabel">Robux spent</span>
+                </div>
+                <div class="chartHint" id="chartHint">Tip: hover points for exact values</div>
+              </div>
             </div>
           </div>
         </div>
@@ -316,11 +602,11 @@
       <div class="panel">
         <div class="header">
           <div class="title">
-            <h1 style="font-size:18px;">Live log</h1>
+            <h1 class="logTitle">Live log</h1>
             <p>Shows status messages (including rate limits) as they happen.</p>
           </div>
           <div class="pill">
-            <span class="dot" style="background:rgba(232,236,255,.35); box-shadow:none;"></span>
+            <span class="dot dotMuted"></span>
             <span id="logCount">0 lines</span>
           </div>
         </div>
@@ -334,270 +620,679 @@
         </div>
       </div>
     </div>
+  <script>
+  let cookiePath = null;
+  let scanning = false;
+  let cookieValidated = false;
 
-    <script>
-      let cookiePath = null;
-      let scanning = false;
-      let cookieValidated = false;
+  let spendSeries = { monthly: [], yearly: [], usdPerRobux: 0.01 };
+  let insights = null;
 
-      const pickBtn = document.getElementById("pick");
-      const scanBtn = document.getElementById("scan");
-      const fileName = document.getElementById("fileName");
+  let chartGranularity = "month"; 
+  let chartMetric = "robux";      
+  let hoverIndex = -1;
 
-      const statusText = document.getElementById("statusText");
-      const statusDot = document.getElementById("statusDot");
+  let lastPadL = 56;
 
-      const progressSection = document.getElementById("progressSection");
-      const progressFill = document.getElementById("progressFill");
-      const progressText = document.getElementById("progressText");
-      const progressChip = document.getElementById("progressChip");
+  const canvas = document.getElementById("spendChart");
+  const ctx = canvas.getContext("2d", { alpha: true });
 
-      const statsSection = document.getElementById("statsSection");
+  const pickBtn = document.getElementById("pick");
+  const scanBtn = document.getElementById("scan");
+  const fileName = document.getElementById("fileName");
 
-      const logEl = document.getElementById("log");
-      const logCountEl = document.getElementById("logCount");
-      const clearLogBtn = document.getElementById("clearLog");
+  const statusText = document.getElementById("statusText");
+  const statusDot = document.getElementById("statusDot");
 
-      let logLines = 0;
-      let rlTimer = null;
-      let rlUntil = 0;
-      let inRateLimitMode = false;
+  const progressSection = document.getElementById("progressSection");
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+  const progressChip = document.getElementById("progressChip");
 
-      function fmt(n){ return (n ?? 0).toLocaleString(); }
-      function fmtRobux(n){ return `R$${fmt(n)}`; }
-      function fmtUSD(n){
-        const v = Number(n ?? 0);
-        return `$${v.toFixed(2)}`;
-      }
+  const statsSection = document.getElementById("statsSection");
 
-      function setStatus(text, mode){
-        statusText.textContent = text;
-        statusDot.classList.remove("working","error");
-        if (mode === "working") statusDot.classList.add("working");
-        if (mode === "error") statusDot.classList.add("error");
-      }
+  const logEl = document.getElementById("log");
+  const logCountEl = document.getElementById("logCount");
+  const clearLogBtn = document.getElementById("clearLog");
 
-      function setProgress(pct, text, chipText = null, chipKind = null){
-        progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
-        progressText.textContent = text;
+  const granMonthBtn = document.getElementById("granMonth");
+  const granYearBtn = document.getElementById("granYear");
+  const metricRobux = document.getElementById("metricRobux");
+  const metricUSD = document.getElementById("metricUSD");
+  const chartEmpty = document.getElementById("chartEmpty");
+  const chartLegendLabel = document.getElementById("chartLegendLabel");
+  const chartHint = document.getElementById("chartHint");
 
-        if (chipText){
-          progressChip.style.display = "inline-flex";
-          progressChip.textContent = chipText;
-          progressChip.classList.remove("warn","good","bad");
-          if (chipKind) progressChip.classList.add(chipKind);
-        } else {
-          progressChip.style.display = "none";
-        }
-      }
+  const avgPerMonthEl = document.getElementById("avgPerMonth");
+  const avgPerMonthUSDEl = document.getElementById("avgPerMonthUSD");
+  const avgPerYearEl = document.getElementById("avgPerYear");
+  const avgPerYearUSDEl = document.getElementById("avgPerYearUSD");
+  const avgPerPurchaseEl = document.getElementById("avgPerPurchase");
+  const avgPerPurchaseUSDEl = document.getElementById("avgPerPurchaseUSD");
 
-      function showStats(totals, purchaseCount){
-        document.getElementById("totalSpent").textContent = fmtRobux(totals.totalSpentAllPurchases);
-        document.getElementById("purchaseCount").textContent = fmt(purchaseCount);
-        document.getElementById("gameSpent").textContent = fmtRobux(totals.totalSpentInGames);
-        document.getElementById("otherSpent").textContent = fmtRobux(totals.totalSpentOutsideGames);
+  const peakMonthLabelEl = document.getElementById("peakMonthLabel");
+  const peakMonthRobuxEl = document.getElementById("peakMonthRobux");
+  const peakMonthUSDEl = document.getElementById("peakMonthUSD");
 
-        const acq = totals.acquisition || {};
-        document.getElementById("robuxBoughtUSD").textContent = fmtUSD(acq?.robuxPurchases?.usdEstimate ?? 0);
-        document.getElementById("premiumUSD").textContent = fmtUSD(acq?.premium?.usdEstimate ?? 0);
-        document.getElementById("totalUSD").textContent = fmtUSD(acq?.total?.usdEstimate ?? 0);
-        document.getElementById("totalAcquiredRobux").textContent = fmt(acq?.total?.robux ?? 0);
+  function fmt(n){ return (n ?? 0).toLocaleString(); }
+  function fmtRobux(n){ return `R$${fmt(Math.round((Number(n) || 0) * 100) / 100)}`; }
+  function fmtUSD(n){
+    const v = Number(n ?? 0);
+    return `$${v.toFixed(2)}`;
+  }
 
-        statsSection.style.display = "block";
-      }
+  function setStatus(text, mode){
+    statusText.textContent = text;
+    statusDot.classList.remove("working","error");
+    if (mode === "working") statusDot.classList.add("working");
+    if (mode === "error") statusDot.classList.add("error");
+  }
 
-      function appendLog(msg, meta = {}, ts = Date.now()){
-        const t = new Date(ts);
-        const hh = String(t.getHours()).padStart(2,"0");
-        const mm = String(t.getMinutes()).padStart(2,"0");
-        const ss = String(t.getSeconds()).padStart(2,"0");
+  function setProgress(pct, text, chipText = null, chipKind = null){
+    progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    progressText.textContent = text;
 
-        const line = document.createElement("div");
-        line.className = "logLine";
+    if (chipText){
+      progressChip.style.display = "inline-flex";
+      progressChip.textContent = chipText;
+      progressChip.classList.remove("warn","good","bad");
+      if (chipKind) progressChip.classList.add(chipKind);
+    } else {
+      progressChip.style.display = "none";
+    }
+  }
 
-        const lvl = (meta.level || "").toLowerCase();
-        if (lvl) line.classList.add(lvl);
+  function parseLocaleNumber(s){
+    const cleaned = String(s).replace(/[^\d]/g, "");
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
 
-        if (meta.kind === "ratelimit") line.classList.add("warn");
-        if (meta.kind === "retry") line.classList.add("warn");
-        if (meta.kind === "checkpoint" || meta.kind === "checkpoint-resume") line.classList.add("muted");
+  function periodToPretty(period){
+    if (!period) return "—";
+    if (/^\d{4}$/.test(period)) return period;
+    const m = /^(\d{4})-(\d{2})$/.exec(period);
+    if (!m) return period;
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = new Date(Date.UTC(y, mo - 1, 1));
+    const month = d.toLocaleString(undefined, { month: "short" });
+    return `${month} ${y}`;
+  }
 
-        line.textContent = `[${hh}:${mm}:${ss}] ${msg}`;
-        logEl.appendChild(line);
+  let logLines = 0;
+  let rlTimer = null;
+  let rlUntil = 0;
+  let inRateLimitMode = false;
 
-        logLines++;
-        logCountEl.textContent = `${logLines} line${logLines===1?"":"s"}`;
+  function appendLog(msg, meta = {}, ts = Date.now()){
+    const t = new Date(ts);
+    const hh = String(t.getHours()).padStart(2,"0");
+    const mm = String(t.getMinutes()).padStart(2,"0");
+    const ss = String(t.getSeconds()).padStart(2,"0");
 
-        const nearBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 120);
-        if (nearBottom) logEl.scrollTop = logEl.scrollHeight;
-      }
+    const line = document.createElement("div");
+    line.className = "logLine";
 
-      function stopRateLimitCountdown(){
-        if (rlTimer) clearInterval(rlTimer);
-        rlTimer = null;
-        rlUntil = 0;
-        inRateLimitMode = false;
-      }
+    const lvl = (meta.level || "").toLowerCase();
+    if (lvl) line.classList.add(lvl);
 
-      function startRateLimitCountdown(delayMs){
-        if (typeof delayMs !== "number" || !isFinite(delayMs) || delayMs <= 0) return;
-        if (rlTimer) clearInterval(rlTimer);
-        rlUntil = Date.now() + delayMs;
-        inRateLimitMode = true;
+    if (meta.kind === "ratelimit") line.classList.add("warn");
+    if (meta.kind === "retry") line.classList.add("warn");
+    if (meta.kind === "checkpoint" || meta.kind === "checkpoint-resume") line.classList.add("muted");
 
-        const tick = () => {
-          if (!inRateLimitMode) return;
-          const left = Math.max(0, rlUntil - Date.now());
-          const ms = Math.ceil(left);
-          if (ms <= 0){
-            stopRateLimitCountdown();
-            return;
-          }
-          setStatus("Rate limited", "working");
-          setProgress(
-            Math.max(5, parseFloat(progressFill.style.width) || 5),
-            `Ratelimited. Retrying in ${ms.toLocaleString()} ms…`,
-            "429",
-            "warn"
-          );
-        };
+    line.textContent = `[${hh}:${mm}:${ss}] ${msg}`;
+    logEl.appendChild(line);
 
-        tick();
-        rlTimer = setInterval(tick, 120);
-      }
+    logLines++;
+    logCountEl.textContent = `${logLines} line${logLines===1?"":"s"}`;
 
-      function hardClearRateLimit(){
+    const nearBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 120);
+    if (nearBottom) logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function stopRateLimitCountdown(){
+    if (rlTimer) clearInterval(rlTimer);
+    rlTimer = null;
+    rlUntil = 0;
+    inRateLimitMode = false;
+  }
+
+  function startRateLimitCountdown(delayMs){
+    if (typeof delayMs !== "number" || !isFinite(delayMs) || delayMs <= 0) return;
+    if (rlTimer) clearInterval(rlTimer);
+    rlUntil = Date.now() + delayMs;
+    inRateLimitMode = true;
+
+    const tick = () => {
+      if (!inRateLimitMode) return;
+      const left = Math.max(0, rlUntil - Date.now());
+      const ms = Math.ceil(left);
+      if (ms <= 0){
         stopRateLimitCountdown();
-        if (scanning) setStatus("Scanning…", "working");
+        return;
       }
+      setStatus("Rate limited", "working");
+      setProgress(
+        Math.max(5, parseFloat(progressFill.style.width) || 5),
+        `Ratelimited. Retrying in ${ms.toLocaleString()} ms…`,
+        "429",
+        "warn"
+      );
+    };
 
-      function parseLocaleNumber(s){
-        const cleaned = String(s).replace(/[^\d]/g, "");
-        const n = Number(cleaned);
-        return Number.isFinite(n) ? n : 0;
-      }
+    tick();
+    rlTimer = setInterval(tick, 120);
+  }
 
-      clearLogBtn.addEventListener("click", () => {
-        logEl.innerHTML = "";
-        logLines = 0;
-        logCountEl.textContent = "0 lines";
-      });
+  function hardClearRateLimit(){
+    stopRateLimitCountdown();
+    if (scanning) setStatus("Scanning…", "working");
+  }
 
-      window.api.onProgress(({ msg, meta, ts }) => {
-        appendLog(msg, meta, ts);
+  clearLogBtn.addEventListener("click", () => {
+    logEl.innerHTML = "";
+    logLines = 0;
+    logCountEl.textContent = "0 lines";
+  });
 
-        if (/^Fetched\s/i.test(msg)) {
-          hardClearRateLimit();
-        }
+  function showStats(totals, purchaseCount){
+    document.getElementById("totalSpent").textContent = fmtRobux(totals.totalSpentAllPurchases);
+    document.getElementById("purchaseCount").textContent = fmt(purchaseCount);
+    document.getElementById("gameSpent").textContent = fmtRobux(totals.totalSpentInGames);
+    document.getElementById("otherSpent").textContent = fmtRobux(totals.totalSpentOutsideGames);
 
-        if (meta?.status === 429 || meta?.kind === "ratelimit") {
-          if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
-        } else if (inRateLimitMode) {
-          hardClearRateLimit();
-        }
+    const acq = totals.acquisition || {};
+    document.getElementById("robuxBoughtUSD").textContent = fmtUSD(acq?.robuxPurchases?.usdEstimate ?? 0);
+    document.getElementById("premiumUSD").textContent = fmtUSD(acq?.premium?.usdEstimate ?? 0);
+    document.getElementById("totalUSD").textContent = fmtUSD(acq?.total?.usdEstimate ?? 0);
+    document.getElementById("totalAcquiredRobux").textContent = fmt(acq?.total?.robux ?? 0);
 
-        const m = /^Fetched\s([\d.,\s]+)\s+Purchase\s+tx\s+\(page\s+(\d+)\)/i.exec(msg);
-        if (m) {
-          const count = parseLocaleNumber(m[1]);
-          const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
-          setStatus("Scanning…", "working");
-          setProgress(pct, `Scanned ${count.toLocaleString()} purchases`, `${count.toLocaleString()}`, "good");
-        } else if (/Authenticating/i.test(msg)) {
-          hardClearRateLimit();
-          setStatus("Scanning…", "working");
-          setProgress(3, "Authenticating…");
-        } else if (/Authenticated/i.test(msg)) {
-          hardClearRateLimit();
-          setStatus("Scanning…", "working");
-          setProgress(6, "Authenticated. Scanning…");
-        } else if (/Computing totals/i.test(msg)) {
-          hardClearRateLimit();
-          setStatus("Scanning…", "working");
-          setProgress(97, "Computing totals…", "finalizing", null);
-        } else if (/Done/i.test(msg)) {
-          stopRateLimitCountdown();
-          setStatus("Complete");
-          setProgress(100, "Complete", "done", "good");
-        } else if (/Error:/i.test(msg)) {
-          stopRateLimitCountdown();
-          setStatus("Error", "error");
-          setProgress(0, "Failed", "error", "bad");
-        }
-      });
+    statsSection.style.display = "block";
+  }
 
-      pickBtn.addEventListener("click", async () => {
-        const res = await window.api.pickCookieFile();
+  function showInsights(ins){
+    insights = ins || null;
 
-        cookieValidated = false;
-        scanBtn.disabled = true;
+    const avg = ins?.averages || {};
+    avgPerMonthEl.textContent = fmtRobux(avg.robuxPerMonth ?? 0);
+    avgPerMonthUSDEl.textContent = fmtUSD(avg.usdPerMonth ?? 0);
 
-        if (!res.ok) {
-          fileName.textContent = "No file selected";
-          cookiePath = null;
-          setStatus("Ready");
-          return;
-        }
+    avgPerYearEl.textContent = fmtRobux(avg.robuxPerYear ?? 0);
+    avgPerYearUSDEl.textContent = fmtUSD(avg.usdPerYear ?? 0);
 
-        cookiePath = res.path;
-        fileName.textContent = cookiePath.split(/[\\/]/).pop();
-        appendLog(`Selected cookie file: ${fileName.textContent}`, { level: "muted" });
+    avgPerPurchaseEl.textContent = fmtRobux(avg.robuxPerPurchase ?? 0);
+    avgPerPurchaseUSDEl.textContent = fmtUSD(avg.usdPerPurchase ?? 0);
 
-        setStatus("Validating…", "working");
-        progressSection.style.display = "block";
-        setProgress(2, "Validating cookie…");
+    const peak = ins?.peakMonth || null;
+    if (!peak){
+      peakMonthLabelEl.textContent = "—";
+      peakMonthRobuxEl.textContent = "R$0";
+      peakMonthUSDEl.textContent = "$0.00";
+      return;
+    }
 
-        const v = await window.api.validateCookie({ cookiePath });
+    peakMonthLabelEl.textContent = `${periodToPretty(peak.period)} • ${fmt(peak.purchaseCount)} purchase${peak.purchaseCount===1?"":"s"}`;
+    peakMonthRobuxEl.textContent = fmtRobux(peak.robux ?? 0);
+    peakMonthUSDEl.textContent = fmtUSD(peak.usdEstimate ?? 0);
+  }
 
-        if (!v.ok) {
-          cookieValidated = false;
-          scanBtn.disabled = true;
-          setStatus("Invalid cookie", "error");
-          setProgress(0, `Invalid cookie: ${v.error}`, "invalid", "bad");
-          appendLog(`Cookie invalid: ${v.error}`, { level: "error" });
-          return;
-        }
+  function getActiveSeries(){
+    return chartGranularity === "year" ? (spendSeries.yearly || []) : (spendSeries.monthly || []);
+  }
 
-        cookieValidated = true;
-        scanBtn.disabled = false;
-        setStatus("Cookie OK");
-        setProgress(0, "Ready to scan", "ok", "good");
-      });
+  function valueForPoint(p){
+    if (!p) return 0;
+    return chartMetric === "usd" ? Number(p.usdEstimate ?? 0) : Number(p.robux ?? 0);
+  }
 
-      scanBtn.addEventListener("click", async () => {
-        if (!cookiePath || scanning || !cookieValidated) return;
+  function labelForPoint(p){
+    if (!p) return "";
+    return chartGranularity === "year" ? String(p.period) : periodToPretty(p.period);
+  }
 
-        scanning = true;
-        pickBtn.disabled = true;
-        scanBtn.disabled = true;
-        statsSection.style.display = "none";
-        progressSection.style.display = "block";
+  function metricLabel(){
+    return chartMetric === "usd" ? "USD spent" : "Robux spent";
+  }
 
-        stopRateLimitCountdown();
-        setStatus("Scanning…", "working");
-        setProgress(0, "Starting…");
-        appendLog("Scan started.", { level: "muted" });
+  function resizeCanvasToCSS(){
+    const dpr = window.devicePixelRatio || 1;
 
-        const res = await window.api.scanSpend({ cookiePath });
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(1, Math.floor(rect.width));
+    const h = Math.max(1, Math.floor(rect.height));
 
-        scanning = false;
-        pickBtn.disabled = false;
-        scanBtn.disabled = false;
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
 
-        stopRateLimitCountdown();
+    if (canvas.width !== targetW || canvas.height !== targetH){
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
 
-        if (!res.ok) {
-          setStatus("Error", "error");
-          setProgress(0, "Failed", "error", "bad");
-          appendLog(`Scan failed: ${res.error}`, { level: "error" });
-          return;
-        }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h, dpr };
+  }
 
-        setStatus("Complete");
-        setProgress(100, "Complete", "done", "good");
+  function drawChart(){
+    const { w, h } = resizeCanvasToCSS();
+    ctx.clearRect(0, 0, w, h);
 
-        showStats(res.totals, res.purchasesCount);
-        appendLog(`Saved results to: ${res.dataDir}`, { level: "ok" });
-      });
-    </script>
+    const series = getActiveSeries();
+    const hasData = Array.isArray(series) && series.length > 0;
+
+    chartEmpty.style.display = hasData ? "none" : "flex";
+    chartLegendLabel.textContent = metricLabel();
+
+    if (!hasData) return;
+
+    const padR = 16;
+    const padT = 14;
+    const padB = 34;
+
+    const vals = series.map(valueForPoint);
+    let vMin = 0;
+    let vMax = Math.max(...vals, 0);
+
+    const head = vMax > 0 ? vMax * 0.08 : 1;
+    vMax = vMax + head;
+
+    // Grid lines count
+    const gridN = 4;
+
+    ctx.save();
+    ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+    let maxLabelW = 0;
+
+    for (let g = 0; g <= gridN; g++){
+      const t = 1 - (g / gridN);
+      const v = vMin + t * (vMax - vMin);
+      const label = chartMetric === "usd"
+        ? `$${v.toFixed(vMax < 10 ? 2 : 0)}`
+        : `R$${Math.round(v).toLocaleString()}`;
+      maxLabelW = Math.max(maxLabelW, ctx.measureText(label).width);
+    }
+    ctx.restore();
+
+    const padL = Math.ceil(maxLabelW + 18);
+    lastPadL = padL;
+
+    const plotW = Math.max(1, w - padL - padR);
+    const plotH = Math.max(1, h - padT - padB);
+
+    const xFor = (i) => padL + (series.length === 1 ? plotW / 2 : (i / (series.length - 1)) * plotW);
+    const yFor = (v) => padT + (1 - (v - vMin) / Math.max(1e-9, (vMax - vMin))) * plotH;
+
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+
+    for (let g = 0; g <= gridN; g++){
+      const yy = padT + (g / gridN) * plotH;
+      ctx.strokeStyle = "rgba(255,255,255,.06)";
+      ctx.beginPath();
+      ctx.moveTo(padL, yy);
+      ctx.lineTo(padL + plotW, yy);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + plotH);
+    ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(169,178,221,.92)";
+    ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    for (let g = 0; g <= gridN; g++){
+      const t = 1 - (g / gridN);
+      const v = vMin + t * (vMax - vMin);
+      const yy = padT + (g / gridN) * plotH;
+      const label = chartMetric === "usd"
+        ? `$${v.toFixed(vMax < 10 ? 2 : 0)}`
+        : `R$${Math.round(v).toLocaleString()}`;
+      ctx.fillText(label, padL - 8, yy);
+    }
+    ctx.restore();
+
+    const points = series.map((p, i) => ({
+      x: xFor(i),
+      y: yFor(valueForPoint(p)),
+      v: valueForPoint(p)
+    }));
+
+    ctx.save();
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    ctx.strokeStyle = "rgba(124,92,255,.35)";
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i++){
+      const pt = points[i];
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(34,211,238,.85)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i++){
+      const pt = points[i];
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.stroke();
+
+    for (let i = 0; i < points.length; i++){
+      const pt = points[i];
+      ctx.fillStyle = "rgba(232,236,255,.95)";
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (hoverIndex >= 0 && hoverIndex < points.length){
+      const pt = points[hoverIndex];
+
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pt.x, padT);
+      ctx.lineTo(pt.x, padT + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,176,32,.95)";
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      const p = series[hoverIndex];
+      const label = labelForPoint(p);
+      const v = valueForPoint(p);
+      const vText = chartMetric === "usd" ? fmtUSD(v) : fmtRobux(v);
+
+      const tx = pt.x + 10;
+      const ty = pt.y - 10;
+
+      ctx.font = "12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif";
+      const line1 = label;
+      const line2 = vText;
+
+      const w1 = ctx.measureText(line1).width;
+      const w2 = ctx.measureText(line2).width;
+      const bw = Math.ceil(Math.max(w1, w2) + 18);
+      const bh = 44;
+
+      let bx = tx;
+      let by = ty - bh;
+
+      if (bx + bw > padL + plotW) bx = (padL + plotW) - bw;
+      if (bx < padL) bx = padL;
+      if (by < padT) by = padT;
+
+      ctx.fillStyle = "rgba(15,20,35,.92)";
+      ctx.strokeStyle = "rgba(255,255,255,.10)";
+      ctx.lineWidth = 1;
+      roundRect(ctx, bx, by, bw, bh, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(232,236,255,.96)";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText(line1, bx + 9, by + 8);
+
+      ctx.fillStyle = "rgba(169,178,221,.96)";
+      ctx.fillText(line2, bx + 9, by + 24);
+
+      chartHint.textContent = `${label} • ${vText}`;
+    } else {
+      chartHint.textContent = "Tip: hover points for exact values";
+    }
+
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = "rgba(169,178,221,.92)";
+    ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    const maxLabels = Math.min(6, series.length);
+    const step = series.length <= maxLabels ? 1 : Math.ceil(series.length / maxLabels);
+
+    for (let i = 0; i < series.length; i += step){
+      const x = xFor(i);
+      const text = chartGranularity === "year"
+        ? String(series[i].period)
+        : String(series[i].period).slice(2); 
+      ctx.fillText(text, x, padT + plotH + 8);
+    }
+
+    if (series.length > 1){
+      const last = series.length - 1;
+      const x = xFor(last);
+      const text = chartGranularity === "year"
+        ? String(series[last].period)
+        : String(series[last].period).slice(2);
+      ctx.fillText(text, x, padT + plotH + 8);
+    }
+
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rr);
+    ctx.arcTo(x + w, y + h, x, y + h, rr);
+    ctx.arcTo(x, y + h, x, y, rr);
+    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.closePath();
+  }
+
+  function pickHoverIndexFromEvent(evt){
+    const series = getActiveSeries();
+    if (!series || series.length === 0) return -1;
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = evt.clientX - rect.left;
+    const my = evt.clientY - rect.top;
+
+    const w = rect.width;
+    const h = rect.height;
+    const padL = lastPadL;
+    const padR = 16, padT = 14, padB = 34;
+
+    const plotW = Math.max(1, w - padL - padR);
+    const plotH = Math.max(1, h - padT - padB);
+
+    if (mx < padL || mx > padL + plotW || my < padT || my > padT + plotH) return -1;
+
+    if (series.length === 1) return 0;
+    const t = (mx - padL) / plotW;
+    const idx = Math.round(t * (series.length - 1));
+    return Math.max(0, Math.min(series.length - 1, idx));
+  }
+
+  canvas.addEventListener("mousemove", (evt) => {
+    const idx = pickHoverIndexFromEvent(evt);
+    if (idx !== hoverIndex){
+      hoverIndex = idx;
+      drawChart();
+    }
+  });
+  canvas.addEventListener("mouseleave", () => {
+    if (hoverIndex !== -1){
+      hoverIndex = -1;
+      drawChart();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    drawChart();
+  });
+
+  function setGranularity(g){
+    chartGranularity = g;
+    granMonthBtn.setAttribute("aria-selected", g === "month" ? "true" : "false");
+    granYearBtn.setAttribute("aria-selected", g === "year" ? "true" : "false");
+    hoverIndex = -1;
+    drawChart();
+  }
+
+  function setMetric(m){
+    chartMetric = m;
+    hoverIndex = -1;
+    drawChart();
+  }
+
+  granMonthBtn.addEventListener("click", () => setGranularity("month"));
+  granYearBtn.addEventListener("click", () => setGranularity("year"));
+
+  metricRobux.addEventListener("change", () => {
+    if (metricRobux.checked) setMetric("robux");
+  });
+  metricUSD.addEventListener("change", () => {
+    if (metricUSD.checked) setMetric("usd");
+  });
+
+  window.api.onProgress(({ msg, meta, ts }) => {
+    appendLog(msg, meta, ts);
+
+    if (/^Fetched\s/i.test(msg)) {
+      hardClearRateLimit();
+    }
+
+    if (meta?.status === 429 || meta?.kind === "ratelimit") {
+      if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
+    } else if (inRateLimitMode) {
+      hardClearRateLimit();
+    }
+
+    const m = /^Fetched\s([\d.,\s]+)\s+Purchase\s+tx\s+\(page\s+(\d+)\)/i.exec(msg);
+    if (m) {
+      const count = parseLocaleNumber(m[1]);
+      const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
+      setStatus("Scanning…", "working");
+      setProgress(pct, `Scanned ${count.toLocaleString()} purchases`, `${count.toLocaleString()}`, "good");
+    } else if (/Authenticating/i.test(msg)) {
+      hardClearRateLimit();
+      setStatus("Scanning…", "working");
+      setProgress(3, "Authenticating…");
+    } else if (/Authenticated/i.test(msg)) {
+      hardClearRateLimit();
+      setStatus("Scanning…", "working");
+      setProgress(6, "Authenticated. Scanning…");
+    } else if (/Computing totals/i.test(msg)) {
+      hardClearRateLimit();
+      setStatus("Scanning…", "working");
+      setProgress(97, "Computing totals…", "finalizing", null);
+    } else if (/Done/i.test(msg)) {
+      stopRateLimitCountdown();
+      setStatus("Complete");
+      setProgress(100, "Complete", "done", "good");
+    } else if (/Error:/i.test(msg)) {
+      stopRateLimitCountdown();
+      setStatus("Error", "error");
+      setProgress(0, "Failed", "error", "bad");
+    }
+  });
+
+  pickBtn.addEventListener("click", async () => {
+    const res = await window.api.pickCookieFile();
+
+    cookieValidated = false;
+    scanBtn.disabled = true;
+
+    if (!res.ok) {
+      fileName.textContent = "No file selected";
+      cookiePath = null;
+      setStatus("Ready");
+      return;
+    }
+
+    cookiePath = res.path;
+    fileName.textContent = cookiePath.split(/[\\/]/).pop();
+    appendLog(`Selected cookie file: ${fileName.textContent}`, { level: "muted" });
+
+    setStatus("Validating…", "working");
+    progressSection.style.display = "block";
+    setProgress(2, "Validating cookie…");
+
+    const v = await window.api.validateCookie({ cookiePath });
+
+    if (!v.ok) {
+      cookieValidated = false;
+      scanBtn.disabled = true;
+      setStatus("Invalid cookie", "error");
+      setProgress(0, `Invalid cookie: ${v.error}`, "invalid", "bad");
+      appendLog(`Cookie invalid: ${v.error}`, { level: "error" });
+      return;
+    }
+
+    cookieValidated = true;
+    scanBtn.disabled = false;
+    setStatus("Cookie OK");
+    setProgress(0, "Ready to scan", "ok", "good");
+  });
+
+  scanBtn.addEventListener("click", async () => {
+    if (!cookiePath || scanning || !cookieValidated) return;
+
+    scanning = true;
+    pickBtn.disabled = true;
+    scanBtn.disabled = true;
+
+    statsSection.style.display = "none";
+    progressSection.style.display = "block";
+    stopRateLimitCountdown();
+    setStatus("Scanning…", "working");
+    setProgress(0, "Starting…");
+    appendLog("Scan started.", { level: "muted" });
+
+    spendSeries = { monthly: [], yearly: [], usdPerRobux: spendSeries.usdPerRobux ?? 0.01 };
+    insights = null;
+    hoverIndex = -1;
+    drawChart();
+
+    const res = await window.api.scanSpend({ cookiePath });
+
+    scanning = false;
+    pickBtn.disabled = false;
+    scanBtn.disabled = false;
+
+    stopRateLimitCountdown();
+
+    if (!res.ok) {
+      setStatus("Error", "error");
+      setProgress(0, "Failed", "error", "bad");
+      appendLog(`Scan failed: ${res.error}`, { level: "error" });
+      return;
+    }
+
+    setStatus("Complete");
+    setProgress(100, "Complete", "done", "good");
+
+    showStats(res.totals, res.purchasesCount);
+
+    spendSeries = res.series || { monthly: [], yearly: [], usdPerRobux: 0.01 };
+    showInsights(res.insights || null);
+
+    setGranularity("month");
+    setMetric("robux");
+
+    appendLog(`Saved results to: ${res.dataDir}`, { level: "ok" });
+  });
+
+  drawChart();
+</script>
   </body>
 </html>

@@ -84,7 +84,7 @@ async function getCsrfToken(roblosec, progress) {
     method: "POST",
     headers: {
       ...cookieHeader(roblosec),
-      "User-Agent": "robux-spend-app/2.3",
+      "User-Agent": "robux-spend-app/2.4",
     },
   });
 
@@ -102,7 +102,7 @@ async function getUserId(roblosec, progress) {
     headers: {
       ...cookieHeader(roblosec),
       "X-CSRF-TOKEN": csrf,
-      "User-Agent": "robux-spend-app/2.3",
+      "User-Agent": "robux-spend-app/2.4",
       Accept: "application/json",
     },
   });
@@ -165,7 +165,7 @@ async function fetchTransactionsByTypeAllTime(
         method: "GET",
         headers: {
           ...cookieHeader(roblosec),
-          "User-Agent": "robux-spend-app/2.3",
+          "User-Agent": "robux-spend-app/2.4",
           Accept: "application/json",
         },
       },
@@ -222,7 +222,7 @@ async function probeTransactionType(roblosec, userId, transactionType) {
     method: "GET",
     headers: {
       ...cookieHeader(roblosec),
-      "User-Agent": "robux-spend-app/2.3",
+      "User-Agent": "robux-spend-app/2.4",
       Accept: "application/json",
     },
   });
@@ -374,6 +374,83 @@ async function computeRobuxAcquisitionEstimates(roblosec, userId, progress = () 
   };
 }
 
+function computeSpendOverTime(purchases, granularity = "month") {
+  const map = new Map(); // key -> { robux, purchaseCount }
+
+  for (const tx of purchases) {
+    if (tx?.currency?.type !== "Robux") continue;
+
+    const created = tx?.created;
+    const d = created ? new Date(created) : null;
+    if (!d || Number.isNaN(d.getTime())) continue;
+
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
+    const key = granularity === "year" ? String(y) : `${y}-${String(m).padStart(2, "0")}`;
+
+    const amt = Number(tx.currency?.amount ?? 0) || 0;
+    const spent = Math.abs(amt);
+
+    const cur = map.get(key) || { robux: 0, purchaseCount: 0 };
+    cur.robux += spent;
+    cur.purchaseCount += 1;
+    map.set(key, cur);
+  }
+
+  const points = [...map.entries()]
+    .map(([period, v]) => ({
+      period,
+      robux: v.robux,
+      usdEstimate: Math.round(v.robux * USD_PER_ROBUX * 100) / 100,
+      purchaseCount: v.purchaseCount,
+    }))
+    .sort((a, b) => (a.period < b.period ? -1 : a.period > b.period ? 1 : 0));
+
+  return points;
+}
+
+function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTotal) {
+  const safe = (n) => (Number.isFinite(n) ? n : 0);
+
+  const peakMonth = monthlySeries.reduce(
+    (best, p) => (!best || p.robux > best.robux ? p : best),
+    null
+  );
+
+  const peakYear = yearlySeries.reduce(
+    (best, p) => (!best || p.robux > best.robux ? p : best),
+    null
+  );
+
+  const monthsWithSpend = monthlySeries.length || 0;
+  const yearsWithSpend = yearlySeries.length || 0;
+
+  const totalRobux = safe(monthlySeries.reduce((s, p) => s + safe(p.robux), 0));
+  const avgPerMonth = monthsWithSpend ? totalRobux / monthsWithSpend : 0;
+  const avgPerYear = yearsWithSpend ? totalRobux / yearsWithSpend : 0;
+  const avgPerPurchase = purchasesCountTotal ? totalRobux / purchasesCountTotal : 0;
+
+  return {
+    peakMonth: peakMonth
+      ? { period: peakMonth.period, robux: peakMonth.robux, usdEstimate: peakMonth.usdEstimate, purchaseCount: peakMonth.purchaseCount }
+      : null,
+    peakYear: peakYear
+      ? { period: peakYear.period, robux: peakYear.robux, usdEstimate: peakYear.usdEstimate, purchaseCount: peakYear.purchaseCount }
+      : null,
+    averages: {
+      robuxPerMonth: Math.round(avgPerMonth * 100) / 100,
+      usdPerMonth: Math.round(avgPerMonth * USD_PER_ROBUX * 100) / 100,
+      robuxPerYear: Math.round(avgPerYear * 100) / 100,
+      usdPerYear: Math.round(avgPerYear * USD_PER_ROBUX * 100) / 100,
+      robuxPerPurchase: Math.round(avgPerPurchase * 100) / 100,
+      usdPerPurchase: Math.round(avgPerPurchase * USD_PER_ROBUX * 100) / 100,
+    },
+  };
+}
+
 exports.fetchAllPurchases = { getUserId, fetchPurchasesAllTime };
 exports.computeTotals = computeTotals;
 exports.computeRobuxAcquisitionEstimates = computeRobuxAcquisitionEstimates;
+exports.computeSpendOverTime = computeSpendOverTime;
+exports.computeInsightsFromSeries = computeInsightsFromSeries;
+exports.constants = { USD_PER_ROBUX };

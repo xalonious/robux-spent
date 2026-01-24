@@ -5,12 +5,15 @@ const {
   fetchAllPurchases,
   computeTotals,
   computeRobuxAcquisitionEstimates,
+  computeSpendOverTime,
+  computeInsightsFromSeries,
+  constants,
 } = require("./roblox_spend");
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1040,
-    height: 740,
+    height: 820,
     backgroundColor: "#0b0f1a",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -136,20 +139,33 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     progress(`Computing totals from ${purchases.length.toLocaleString()} purchases…`);
     const spendTotals = computeTotals(purchases);
 
+    progress("Computing spend over time…");
+    const monthly = computeSpendOverTime(purchases, "month");
+    const yearly = computeSpendOverTime(purchases, "year");
+    const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
+
     progress("Scanning Robux acquisition (estimates)…");
     const acquisition = await computeRobuxAcquisitionEstimates(cookie, userId, progress);
 
     const totals = { ...spendTotals, acquisition };
+    const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
 
     const dataDir = app.getPath("userData");
     fs.writeFileSync(path.join(dataDir, "purchases_raw.json"), JSON.stringify(purchases, null, 2));
-    fs.writeFileSync(path.join(dataDir, "spend_totals.json"), JSON.stringify(totals, null, 2));
+    fs.writeFileSync(path.join(dataDir, "spend_totals.json"), JSON.stringify({ totals, series, insights }, null, 2));
 
     progress(`Saved results to userData`, { level: "ok" });
     progress(`Directory: ${dataDir}`, { level: "ok" });
     progress("Done ✅", { level: "ok" });
 
-    return { ok: true, totals, purchasesCount: purchases.length, dataDir };
+    return {
+      ok: true,
+      totals,
+      purchasesCount: purchases.length,
+      dataDir,
+      series,
+      insights,
+    };
   } catch (e) {
     progress(`Error: ${e?.message ?? String(e)}`, { level: "error" });
     return { ok: false, error: e?.message ?? String(e) };
