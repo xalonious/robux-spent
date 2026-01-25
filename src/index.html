@@ -1165,46 +1165,66 @@
   });
 
   window.api.onProgress(({ msg, meta, ts }) => {
-    appendLog(msg, meta, ts);
+  appendLog(msg, meta, ts);
 
-    if (/^Fetched\s/i.test(msg)) {
-      hardClearRateLimit();
-    }
+  const clearRLIfNeeded = () => {
+    if (inRateLimitMode) hardClearRateLimit();
+  };
 
-    if (meta?.status === 429 || meta?.kind === "ratelimit") {
-      if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
-    } else if (inRateLimitMode) {
-      hardClearRateLimit();
-    }
+  if (/^Fetched\s/i.test(msg)) {
+    hardClearRateLimit();
+  }
 
-    const m = /^Fetched\s([\d.,\s]+)\s+Purchase\s+tx\s+\(page\s+(\d+)\)/i.exec(msg);
+  if (meta?.status === 429 || meta?.kind === "ratelimit") {
+    if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
+  } else {
+    clearRLIfNeeded();
+  }
+
+  const friendlyKind = (rawLabel) => {
+    const l = String(rawLabel || "").trim().toLowerCase();
+    if (l === "purchase") return { noun: "purchase", chip: "Purchases" };
+    if (l === "premium") return { noun: "premium stipend", chip: "Premium" };
+    if (l === "currencypurchase") return { noun: "robux purchase credit", chip: "Robux credits" };
+    if (l.includes("premium")) return { noun: "premium transaction", chip: "Premium" };
+    if (l.includes("currency") || l.includes("robux")) return { noun: "robux transaction", chip: "Robux" };
+    return { noun: "transaction", chip: rawLabel };
+  };
+
+  const pluralize = (noun, n) => (n === 1 ? noun : `${noun}s`);
+
+  const rules = [
+    {
+      re: /^Fetched\s([\d.,\s]+)\s+(.+?)\s+tx\s+\(page\s+(\d+)\)/i,
+      run: (m) => {
+        const count = parseLocaleNumber(m[1]);
+        const rawLabel = m[2].trim();
+        const { noun, chip } = friendlyKind(rawLabel);
+        const label = pluralize(noun, count);
+        const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
+        setStatus("Scanning…", "working");
+        setProgress(pct, `Scanned ${count.toLocaleString()} ${label}`, chip ? String(chip) : null, "good");
+      },
+    },
+    { re: /Authenticating/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(3, "Authenticating…"); } },
+    { re: /Authenticated/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(6, "Authenticated. Scanning…"); } },
+    { re: /Computing totals/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing totals…", "finalizing", null); } },
+    { re: /Computing spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(97, "Computing spend over time…", "series", null); } },
+    { re: /Scanning Robux acquisition/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Scanning Robux acquisition…", "acquisition", null); } },
+    { re: /Fetching all Premium stipend transactions/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Fetching premium stipends…", "Premium", "good"); } },
+    { re: /Fetching all Robux purchase credit transactions/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Fetching robux purchase credits…", "Robux credits", "good"); } },
+    { re: /Done/i, run: () => { stopRateLimitCountdown(); setStatus("Complete"); setProgress(100, "Complete", "done", "good"); } },
+    { re: /Error:/i, run: () => { stopRateLimitCountdown(); setStatus("Error", "error"); setProgress(0, "Failed", "error", "bad"); } },
+  ];
+
+  for (const r of rules) {
+    const m = r.re.exec(msg);
     if (m) {
-      const count = parseLocaleNumber(m[1]);
-      const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
-      setStatus("Scanning…", "working");
-      setProgress(pct, `Scanned ${count.toLocaleString()} purchases`, `${count.toLocaleString()}`, "good");
-    } else if (/Authenticating/i.test(msg)) {
-      hardClearRateLimit();
-      setStatus("Scanning…", "working");
-      setProgress(3, "Authenticating…");
-    } else if (/Authenticated/i.test(msg)) {
-      hardClearRateLimit();
-      setStatus("Scanning…", "working");
-      setProgress(6, "Authenticated. Scanning…");
-    } else if (/Computing totals/i.test(msg)) {
-      hardClearRateLimit();
-      setStatus("Scanning…", "working");
-      setProgress(97, "Computing totals…", "finalizing", null);
-    } else if (/Done/i.test(msg)) {
-      stopRateLimitCountdown();
-      setStatus("Complete");
-      setProgress(100, "Complete", "done", "good");
-    } else if (/Error:/i.test(msg)) {
-      stopRateLimitCountdown();
-      setStatus("Error", "error");
-      setProgress(0, "Failed", "error", "bad");
+      r.run(m);
+      break;
     }
-  });
+  }
+});
 
   pickBtn.addEventListener("click", async () => {
     const res = await window.api.pickCookieFile();
