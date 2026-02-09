@@ -1,10 +1,12 @@
+// main.js (fully updated for balance + inflow + outflow + existing insights/chart)
+
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const {
   fetchAllPurchases,
   computeTotals,
-  computeRobuxAcquisitionEstimates,
+  computeRobuxFlows,            // ✅ new (replaces computeRobuxAcquisitionEstimates)
   computeSpendOverTime,
   computeInsightsFromSeries,
   constants,
@@ -130,6 +132,7 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const { userId } = await fetchAllPurchases.getUserId(cookie, progress);
     progress(`Authenticated (userId ${userId}). Starting scan…`);
 
+    // ✅ outflow (purchases) + insights/chart use Purchase only (your existing logic)
     const checkpointPath = path.join(app.getPath("userData"), "checkpoint.json");
 
     const purchases = await fetchAllPurchases.fetchPurchasesAllTime(cookie, userId, progress, {
@@ -144,10 +147,20 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const yearly = computeSpendOverTime(purchases, "year");
     const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
 
-    progress("Scanning Robux acquisition (estimates)…");
-    const acquisition = await computeRobuxAcquisitionEstimates(cookie, userId, progress);
+    // ✅ new: current balance
+    progress("Fetching current Robux balance…");
+    const balance = await fetchAllPurchases.getRobuxBalance(cookie, progress);
 
-    const totals = { ...spendTotals, acquisition };
+    // ✅ new: inflow breakdown (CurrencyPurchase, PremiumStipend, EngagementPayout, GroupPayout, Sale, TradeRobux(+ only))
+    progress("Scanning Robux inflow…");
+    const { inflow } = await computeRobuxFlows(cookie, userId, progress);
+
+    const totals = {
+      ...spendTotals, // outflow totals
+      balance,        // { robux }
+      inflow,         // inflow totals + breakdown
+    };
+
     const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
 
     const dataDir = app.getPath("userData");

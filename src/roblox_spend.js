@@ -1,7 +1,8 @@
+// roblox_spend.js
 const fs = require("fs");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const USD_PER_ROBUX = 0.01; 
+const USD_PER_ROBUX = 0.01;
 
 function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
@@ -84,7 +85,7 @@ async function getCsrfToken(roblosec, progress) {
     method: "POST",
     headers: {
       ...cookieHeader(roblosec),
-      "User-Agent": "robux-spend-app/2.4",
+      "User-Agent": "robux-spend-app/3.0",
     },
   });
 
@@ -102,7 +103,7 @@ async function getUserId(roblosec, progress) {
     headers: {
       ...cookieHeader(roblosec),
       "X-CSRF-TOKEN": csrf,
-      "User-Agent": "robux-spend-app/2.4",
+      "User-Agent": "robux-spend-app/3.0",
       Accept: "application/json",
     },
   });
@@ -114,6 +115,36 @@ async function getUserId(roblosec, progress) {
 
   const body = await res.json();
   return { userId: body.id };
+}
+
+// Current Robux balance (wallet)
+async function getRobuxBalance(roblosec, progress = () => {}) {
+  // This endpoint returns current user currency (Robux) when authenticated by cookie.
+  const url = "https://economy.roblox.com/v1/user/currency";
+
+  const res = await fetchWithRetry(
+    url,
+    {
+      method: "GET",
+      headers: {
+        ...cookieHeader(roblosec),
+        "User-Agent": "robux-spend-app/3.0",
+        Accept: "application/json",
+      },
+    },
+    { onLog: (m, meta) => progress(m, meta) }
+  );
+
+  const body = await res.json().catch(() => ({}));
+  // Typically: { robux: number }
+  const robux = Number(body?.robux ?? 0) || 0;
+
+  progress(`Fetched current Robux balance: R$${robux.toLocaleString()}`, {
+    level: "ok",
+    kind: "balance",
+  });
+
+  return { robux };
 }
 
 async function fetchTransactionsByTypeAllTime(
@@ -165,7 +196,7 @@ async function fetchTransactionsByTypeAllTime(
         method: "GET",
         headers: {
           ...cookieHeader(roblosec),
-          "User-Agent": "robux-spend-app/2.4",
+          "User-Agent": "robux-spend-app/3.0",
           Accept: "application/json",
         },
       },
@@ -210,49 +241,37 @@ async function fetchTransactionsByTypeAllTime(
   return out;
 }
 
-async function probeTransactionType(roblosec, userId, transactionType) {
-  const qp = new URLSearchParams();
-  qp.set("transactionType", transactionType);
-  qp.set("limit", "10");
-  qp.set("sortOrder", "Desc");
-
-  const url = `https://economy.roblox.com/v2/users/${userId}/transactions?${qp.toString()}`;
-
-  const res = await fetchWithRetry(url, {
-    method: "GET",
-    headers: {
-      ...cookieHeader(roblosec),
-      "User-Agent": "robux-spend-app/2.4",
-      Accept: "application/json",
-    },
-  });
-
-  const body = await res.json().catch(() => ({}));
-  const data = body?.data ?? [];
-  return Array.isArray(data) ? data.length : 0;
-}
-
-async function pickFirstWorkingType(roblosec, userId, candidates, progress, label) {
-  for (const t of candidates) {
-    try {
-      progress(`Probing ${label}: ${t}…`, { level: "muted" });
-      const count = await probeTransactionType(roblosec, userId, t);
-      if (count > 0) {
-        progress(`Detected ${label} type: ${t}`, { level: "ok" });
-        return t;
-      }
-    } catch {}
-  }
-  progress(`No ${label} transaction type detected (will show 0).`, { level: "warn" });
-  return null;
-}
-
 async function fetchPurchasesAllTime(roblosec, userId, progress = () => {}, opts = {}) {
   return fetchTransactionsByTypeAllTime(roblosec, userId, "Purchase", progress, {
     checkpointPath: opts.checkpointPath,
     enableCheckpoint: true,
     label: "Purchase",
   });
+}
+
+/**
+ * Sums Robux for a list.
+ * - For most inflow tx types: amount is usually positive; we count positives only by default.
+ * - For Purchase (outflow): amount is usually negative; spend uses abs elsewhere.
+ */
+function sumRobux(txList, { mode = "positiveOnly" } = {}) {
+  let total = 0;
+
+  for (const tx of txList) {
+    if (tx?.currency?.type !== "Robux") continue;
+
+    const amt = Number(tx.currency?.amount ?? 0) || 0;
+
+    if (mode === "positiveOnly") {
+      if (amt > 0) total += amt;
+    } else if (mode === "abs") {
+      total += Math.abs(amt);
+    } else if (mode === "raw") {
+      total += amt;
+    }
+  }
+
+  return total;
 }
 
 function computeTotals(purchases) {
@@ -294,84 +313,62 @@ function computeTotals(purchases) {
   };
 }
 
-function sumRobuxAbs(txList) {
-  let total = 0;
-  for (const tx of txList) {
-    if (tx?.currency?.type !== "Robux") continue;
-    const amt = Number(tx.currency?.amount ?? 0) || 0;
-    total += Math.abs(amt);
-  }
-  return total;
-}
-
-async function computeRobuxAcquisitionEstimates(roblosec, userId, progress = () => {}) {
-  const premiumCandidates = [
-    "PremiumStipend",
-    "PremiumStipendCredit",
-    "PremiumStipendPayout",
-    "Premium",
-    "PremiumPayout",
-  ];
-
-  const purchaseCandidates = [
-    "CurrencyPurchase",
-    "RobuxPurchase",
-    "PurchaseCredit",
-    "Credit",
-    "Deposit",
-  ];
-
-  const premiumType = await pickFirstWorkingType(roblosec, userId, premiumCandidates, progress, "Premium stipend");
-  const robuxBuyType = await pickFirstWorkingType(roblosec, userId, purchaseCandidates, progress, "Robux purchase credits");
-
-  let premiumTx = [];
-  let robuxBuyTx = [];
-
-  if (premiumType) {
-    progress(`Fetching all Premium stipend transactions (${premiumType})…`);
-    premiumTx = await fetchTransactionsByTypeAllTime(roblosec, userId, premiumType, progress, {
-      enableCheckpoint: false,
-      label: "Premium",
-    });
-  }
-
-  if (robuxBuyType) {
-    progress(`Fetching all Robux purchase credit transactions (${robuxBuyType})…`);
-    robuxBuyTx = await fetchTransactionsByTypeAllTime(roblosec, userId, robuxBuyType, progress, {
-      enableCheckpoint: false,
-      label: "CurrencyPurchase",
-    });
-  }
-
-  const premiumRobux = sumRobuxAbs(premiumTx);
-  const boughtRobux = sumRobuxAbs(robuxBuyTx);
-
-  const premiumUSD = Math.round(premiumRobux * USD_PER_ROBUX * 100) / 100;
-  const boughtUSD = Math.round(boughtRobux * USD_PER_ROBUX * 100) / 100;
-
-  const totalRobux = premiumRobux + boughtRobux;
-  const totalUSD = Math.round((premiumUSD + boughtUSD) * 100) / 100;
-
-  return {
-    usdPerRobux: USD_PER_ROBUX,
-    rateNote: "Using 1000 Robux = $10 (USD)",
-    premium: {
-      detectedType: premiumType,
-      robux: premiumRobux,
-      usdEstimate: premiumUSD,
-      transactionCount: premiumTx.length,
-    },
-    robuxPurchases: {
-      detectedType: robuxBuyType,
-      robux: boughtRobux,
-      usdEstimate: boughtUSD,
-      transactionCount: robuxBuyTx.length,
-    },
-    total: {
-      robux: totalRobux,
-      usdEstimate: totalUSD,
-    },
+async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
+  // EXACT types you provided — no probing/guessing:
+  const TYPES = {
+    CurrencyPurchase: "CurrencyPurchase",
+    PremiumStipend: "PremiumStipend",
+    EngagementPayout: "EngagementPayout",
+    GroupPayout: "GroupPayout",
+    Sale: "Sale",
+    TradeRobux: "TradeRobux",
+    Purchase: "Purchase",
   };
+
+  // Inflow (non-Purchase)
+  const inflowOrder = [
+    ["CurrencyPurchase", "Robux bought (money)"],
+    ["PremiumStipend", "Premium stipend"],
+    ["EngagementPayout", "Engagement payout"],
+    ["GroupPayout", "Group payout"],
+    ["Sale", "Sales"],
+    ["TradeRobux", "Trade gains"],
+  ];
+
+  const inflow = {
+    totalRobux: 0,
+    usdEstimate: 0,
+    breakdown: {},
+  };
+
+  for (const [key, label] of inflowOrder) {
+    progress(`Fetching inflow: ${label} (${TYPES[key]})…`, { level: "muted", kind: "inflow" });
+
+    const tx = await fetchTransactionsByTypeAllTime(roblosec, userId, TYPES[key], progress, {
+      enableCheckpoint: false,
+      label: TYPES[key],
+    });
+
+    // TradeRobux can be positive or negative; you want ONLY positive gains.
+    const robux =
+      key === "TradeRobux"
+        ? sumRobux(tx, { mode: "positiveOnly" })
+        : sumRobux(tx, { mode: "positiveOnly" });
+
+    inflow.breakdown[key] = {
+      transactionType: TYPES[key],
+      label,
+      robux,
+      usdEstimate: Math.round(robux * USD_PER_ROBUX * 100) / 100,
+      transactionCount: tx.length,
+    };
+
+    inflow.totalRobux += robux;
+  }
+
+  inflow.usdEstimate = Math.round(inflow.totalRobux * USD_PER_ROBUX * 100) / 100;
+
+  return { inflow };
 }
 
 function computeSpendOverTime(purchases, granularity = "month") {
@@ -448,9 +445,9 @@ function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTo
   };
 }
 
-exports.fetchAllPurchases = { getUserId, fetchPurchasesAllTime };
+exports.fetchAllPurchases = { getUserId, fetchPurchasesAllTime, getRobuxBalance };
 exports.computeTotals = computeTotals;
-exports.computeRobuxAcquisitionEstimates = computeRobuxAcquisitionEstimates;
+exports.computeRobuxFlows = computeRobuxFlows;
 exports.computeSpendOverTime = computeSpendOverTime;
 exports.computeInsightsFromSeries = computeInsightsFromSeries;
 exports.constants = { USD_PER_ROBUX };

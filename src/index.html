@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Robux Spent</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
+    <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root{
     --bg0:#0b0f1a;
@@ -134,7 +134,7 @@
     overflow:hidden;
     text-overflow: ellipsis;
     white-space:nowrap;
-    min-width: 0; 
+    min-width: 0;
   }
 
   button{
@@ -223,13 +223,6 @@
     font-weight: 900;
     letter-spacing:.2px;
   }
-  .subv{
-    margin-top: 6px;
-    font-size: 12px;
-    color: rgba(169,178,221,.95);
-    letter-spacing: .15px;
-  }
-
   .badgeRow{
     display:flex;
     align-items:center;
@@ -433,7 +426,6 @@
 
   .logTitle{ font-size:18px; }
 
-
   @media (max-width: 1080px){
     .shell{ grid-template-columns: 1fr; }
   }
@@ -483,7 +475,50 @@
           </div>
 
           <div id="statsSection" style="display: none;">
-            <div class="label">Robux spent</div>
+            <div class="label">Robux inflow</div>
+            <div class="grid">
+              <div class="card">
+                <div class="k">Total inflow</div>
+                <div class="v" id="inflowTotal">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Current balance</div>
+                <div class="v" id="robuxBalance">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Robux bought</div>
+                <div class="v" id="inflowCurrencyPurchase">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Premium stipends</div>
+                <div class="v" id="inflowPremiumStipend">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Engagement payouts</div>
+                <div class="v" id="inflowEngagementPayout">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Group payouts</div>
+                <div class="v" id="inflowGroupPayout">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Sales</div>
+                <div class="v" id="inflowSale">R$0</div>
+              </div>
+
+              <div class="card">
+                <div class="k">Trade gains</div>
+                <div class="v" id="inflowTradeRobux">R$0</div>
+              </div>
+            </div>
+
+            <div class="label">Robux outflow</div>
             <div class="grid">
               <div class="card">
                 <div class="k">Total spent</div>
@@ -503,58 +538,32 @@
               </div>
             </div>
 
-            <div class="label">Estimated USD (1000 Robux = $10)</div>
-            <div class="grid">
-              <div class="card">
-                <div class="k">Robux bought</div>
-                <div class="v" id="robuxBoughtUSD">$0.00</div>
-              </div>
-              <div class="card">
-                <div class="k">Premium stipend</div>
-                <div class="v" id="premiumUSD">$0.00</div>
-              </div>
-              <div class="card">
-                <div class="k">Total USD estimate</div>
-                <div class="v" id="totalUSD">$0.00</div>
-              </div>
-              <div class="card">
-                <div class="k">Total Robux acquired</div>
-                <div class="v" id="totalAcquiredRobux">0</div>
-              </div>
-            </div>
-
             <div class="label">Insights</div>
             <div class="grid">
               <div class="card">
                 <div class="k">Average per month</div>
                 <div class="v" id="avgPerMonth">R$0</div>
-                <div class="subv" id="avgPerMonthUSD">$0.00</div>
               </div>
 
               <div class="card">
                 <div class="k">Average per year</div>
                 <div class="v" id="avgPerYear">R$0</div>
-                <div class="subv" id="avgPerYearUSD">$0.00</div>
               </div>
 
               <div class="card">
                 <div class="k">Average per purchase</div>
                 <div class="v" id="avgPerPurchase">R$0</div>
-                <div class="subv" id="avgPerPurchaseUSD">$0.00</div>
               </div>
 
               <div class="card">
                 <div class="k">Peak spending month</div>
 
                 <div class="badgeRow">
-                  <span class="badge" id="peakBadge" title="😬 Peak spending month">
-                    😬 Peak
-                  </span>
+                  <span class="badge" id="peakBadge" title="😬 Peak spending month">😬 Peak</span>
                   <span class="badgeMeta" id="peakMonthLabel">—</span>
                 </div>
 
                 <div class="v" id="peakMonthRobux">R$0</div>
-                <div class="subv" id="peakMonthUSD">$0.00</div>
               </div>
             </div>
 
@@ -620,7 +629,8 @@
         </div>
       </div>
     </div>
-  <script>
+
+    <script>
   let cookiePath = null;
   let scanning = false;
   let cookieValidated = false;
@@ -628,8 +638,8 @@
   let spendSeries = { monthly: [], yearly: [], usdPerRobux: 0.01 };
   let insights = null;
 
-  let chartGranularity = "month"; 
-  let chartMetric = "robux";      
+  let chartGranularity = "month";
+  let chartMetric = "robux";
   let hoverIndex = -1;
 
   let lastPadL = 56;
@@ -664,51 +674,47 @@
   const chartHint = document.getElementById("chartHint");
 
   const avgPerMonthEl = document.getElementById("avgPerMonth");
-  const avgPerMonthUSDEl = document.getElementById("avgPerMonthUSD");
   const avgPerYearEl = document.getElementById("avgPerYear");
-  const avgPerYearUSDEl = document.getElementById("avgPerYearUSD");
   const avgPerPurchaseEl = document.getElementById("avgPerPurchase");
-  const avgPerPurchaseUSDEl = document.getElementById("avgPerPurchaseUSD");
 
   const peakMonthLabelEl = document.getElementById("peakMonthLabel");
   const peakMonthRobuxEl = document.getElementById("peakMonthRobux");
-  const peakMonthUSDEl = document.getElementById("peakMonthUSD");
 
-  function fmt(n){ return (n ?? 0).toLocaleString(); }
-  function fmtRobux(n){ return `R$${fmt(Math.round((Number(n) || 0) * 100) / 100)}`; }
-  function fmtUSD(n){
+  function fmt(n) { return (n ?? 0).toLocaleString(); }
+  function fmtRobux(n) { return `R$${fmt(Math.round((Number(n) || 0) * 100) / 100)}`; }
+  function fmtUSD(n) {
     const v = Number(n ?? 0);
     return `$${v.toFixed(2)}`;
   }
 
-  function setStatus(text, mode){
+  function setStatus(text, mode) {
     statusText.textContent = text;
-    statusDot.classList.remove("working","error");
+    statusDot.classList.remove("working", "error");
     if (mode === "working") statusDot.classList.add("working");
     if (mode === "error") statusDot.classList.add("error");
   }
 
-  function setProgress(pct, text, chipText = null, chipKind = null){
+  function setProgress(pct, text, chipText = null, chipKind = null) {
     progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
     progressText.textContent = text;
 
-    if (chipText){
+    if (chipText) {
       progressChip.style.display = "inline-flex";
       progressChip.textContent = chipText;
-      progressChip.classList.remove("warn","good","bad");
+      progressChip.classList.remove("warn", "good", "bad");
       if (chipKind) progressChip.classList.add(chipKind);
     } else {
       progressChip.style.display = "none";
     }
   }
 
-  function parseLocaleNumber(s){
+  function parseLocaleNumber(s) {
     const cleaned = String(s).replace(/[^\d]/g, "");
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : 0;
   }
 
-  function periodToPretty(period){
+  function periodToPretty(period) {
     if (!period) return "—";
     if (/^\d{4}$/.test(period)) return period;
     const m = /^(\d{4})-(\d{2})$/.exec(period);
@@ -725,11 +731,11 @@
   let rlUntil = 0;
   let inRateLimitMode = false;
 
-  function appendLog(msg, meta = {}, ts = Date.now()){
+  function appendLog(msg, meta = {}, ts = Date.now()) {
     const t = new Date(ts);
-    const hh = String(t.getHours()).padStart(2,"0");
-    const mm = String(t.getMinutes()).padStart(2,"0");
-    const ss = String(t.getSeconds()).padStart(2,"0");
+    const hh = String(t.getHours()).padStart(2, "0");
+    const mm = String(t.getMinutes()).padStart(2, "0");
+    const ss = String(t.getSeconds()).padStart(2, "0");
 
     const line = document.createElement("div");
     line.className = "logLine";
@@ -745,20 +751,20 @@
     logEl.appendChild(line);
 
     logLines++;
-    logCountEl.textContent = `${logLines} line${logLines===1?"":"s"}`;
+    logCountEl.textContent = `${logLines} line${logLines === 1 ? "" : "s"}`;
 
     const nearBottom = (logEl.scrollTop + logEl.clientHeight) >= (logEl.scrollHeight - 120);
     if (nearBottom) logEl.scrollTop = logEl.scrollHeight;
   }
 
-  function stopRateLimitCountdown(){
+  function stopRateLimitCountdown() {
     if (rlTimer) clearInterval(rlTimer);
     rlTimer = null;
     rlUntil = 0;
     inRateLimitMode = false;
   }
 
-  function startRateLimitCountdown(delayMs){
+  function startRateLimitCountdown(delayMs) {
     if (typeof delayMs !== "number" || !isFinite(delayMs) || delayMs <= 0) return;
     if (rlTimer) clearInterval(rlTimer);
     rlUntil = Date.now() + delayMs;
@@ -768,7 +774,7 @@
       if (!inRateLimitMode) return;
       const left = Math.max(0, rlUntil - Date.now());
       const ms = Math.ceil(left);
-      if (ms <= 0){
+      if (ms <= 0) {
         stopRateLimitCountdown();
         return;
       }
@@ -785,7 +791,7 @@
     rlTimer = setInterval(tick, 120);
   }
 
-  function hardClearRateLimit(){
+  function hardClearRateLimit() {
     stopRateLimitCountdown();
     if (scanning) setStatus("Scanning…", "working");
   }
@@ -796,66 +802,72 @@
     logCountEl.textContent = "0 lines";
   });
 
-  function showStats(totals, purchaseCount){
+  function showStats(totals, purchaseCount) {
     document.getElementById("totalSpent").textContent = fmtRobux(totals.totalSpentAllPurchases);
     document.getElementById("purchaseCount").textContent = fmt(purchaseCount);
     document.getElementById("gameSpent").textContent = fmtRobux(totals.totalSpentInGames);
     document.getElementById("otherSpent").textContent = fmtRobux(totals.totalSpentOutsideGames);
 
-    const acq = totals.acquisition || {};
-    document.getElementById("robuxBoughtUSD").textContent = fmtUSD(acq?.robuxPurchases?.usdEstimate ?? 0);
-    document.getElementById("premiumUSD").textContent = fmtUSD(acq?.premium?.usdEstimate ?? 0);
-    document.getElementById("totalUSD").textContent = fmtUSD(acq?.total?.usdEstimate ?? 0);
-    document.getElementById("totalAcquiredRobux").textContent = fmt(acq?.total?.robux ?? 0);
+    const bal = totals.balance || {};
+    document.getElementById("robuxBalance").textContent = fmtRobux(bal.robux ?? 0);
+
+    const inflow = totals.inflow || {};
+    document.getElementById("inflowTotal").textContent = fmtRobux(inflow.totalRobux ?? 0);
+
+    const b = inflow.breakdown || {};
+    const getR = (k) => (b?.[k]?.robux ?? 0);
+
+    document.getElementById("inflowCurrencyPurchase").textContent = fmtRobux(getR("CurrencyPurchase"));
+    document.getElementById("inflowPremiumStipend").textContent = fmtRobux(getR("PremiumStipend"));
+    document.getElementById("inflowEngagementPayout").textContent = fmtRobux(getR("EngagementPayout"));
+    document.getElementById("inflowGroupPayout").textContent = fmtRobux(getR("GroupPayout"));
+    document.getElementById("inflowSale").textContent = fmtRobux(getR("Sale"));
+    document.getElementById("inflowTradeRobux").textContent = fmtRobux(getR("TradeRobux"));
 
     statsSection.style.display = "block";
   }
 
-  function showInsights(ins){
+  function showInsights(ins) {
     insights = ins || null;
 
     const avg = ins?.averages || {};
     avgPerMonthEl.textContent = fmtRobux(avg.robuxPerMonth ?? 0);
-    avgPerMonthUSDEl.textContent = fmtUSD(avg.usdPerMonth ?? 0);
 
     avgPerYearEl.textContent = fmtRobux(avg.robuxPerYear ?? 0);
-    avgPerYearUSDEl.textContent = fmtUSD(avg.usdPerYear ?? 0);
 
     avgPerPurchaseEl.textContent = fmtRobux(avg.robuxPerPurchase ?? 0);
-    avgPerPurchaseUSDEl.textContent = fmtUSD(avg.usdPerPurchase ?? 0);
 
     const peak = ins?.peakMonth || null;
-    if (!peak){
+    if (!peak) {
       peakMonthLabelEl.textContent = "—";
       peakMonthRobuxEl.textContent = "R$0";
-      peakMonthUSDEl.textContent = "$0.00";
       return;
     }
 
-    peakMonthLabelEl.textContent = `${periodToPretty(peak.period)} • ${fmt(peak.purchaseCount)} purchase${peak.purchaseCount===1?"":"s"}`;
+    peakMonthLabelEl.textContent =
+      `${periodToPretty(peak.period)} • ${fmt(peak.purchaseCount)} purchase${peak.purchaseCount === 1 ? "" : "s"}`;
     peakMonthRobuxEl.textContent = fmtRobux(peak.robux ?? 0);
-    peakMonthUSDEl.textContent = fmtUSD(peak.usdEstimate ?? 0);
   }
 
-  function getActiveSeries(){
+  function getActiveSeries() {
     return chartGranularity === "year" ? (spendSeries.yearly || []) : (spendSeries.monthly || []);
   }
 
-  function valueForPoint(p){
+  function valueForPoint(p) {
     if (!p) return 0;
     return chartMetric === "usd" ? Number(p.usdEstimate ?? 0) : Number(p.robux ?? 0);
   }
 
-  function labelForPoint(p){
+  function labelForPoint(p) {
     if (!p) return "";
     return chartGranularity === "year" ? String(p.period) : periodToPretty(p.period);
   }
 
-  function metricLabel(){
+  function metricLabel() {
     return chartMetric === "usd" ? "USD spent" : "Robux spent";
   }
 
-  function resizeCanvasToCSS(){
+  function resizeCanvasToCSS() {
     const dpr = window.devicePixelRatio || 1;
 
     const rect = canvas.getBoundingClientRect();
@@ -865,7 +877,7 @@
     const targetW = Math.floor(w * dpr);
     const targetH = Math.floor(h * dpr);
 
-    if (canvas.width !== targetW || canvas.height !== targetH){
+    if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
       canvas.height = targetH;
     }
@@ -874,7 +886,7 @@
     return { w, h, dpr };
   }
 
-  function drawChart(){
+  function drawChart() {
     const { w, h } = resizeCanvasToCSS();
     ctx.clearRect(0, 0, w, h);
 
@@ -897,14 +909,13 @@
     const head = vMax > 0 ? vMax * 0.08 : 1;
     vMax = vMax + head;
 
-    // Grid lines count
     const gridN = 4;
 
     ctx.save();
     ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
     let maxLabelW = 0;
 
-    for (let g = 0; g <= gridN; g++){
+    for (let g = 0; g <= gridN; g++) {
       const t = 1 - (g / gridN);
       const v = vMin + t * (vMax - vMin);
       const label = chartMetric === "usd"
@@ -927,7 +938,7 @@
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
 
-    for (let g = 0; g <= gridN; g++){
+    for (let g = 0; g <= gridN; g++) {
       const yy = padT + (g / gridN) * plotH;
       ctx.strokeStyle = "rgba(255,255,255,.06)";
       ctx.beginPath();
@@ -948,7 +959,7 @@
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
 
-    for (let g = 0; g <= gridN; g++){
+    for (let g = 0; g <= gridN; g++) {
       const t = 1 - (g / gridN);
       const v = vMin + t * (vMax - vMin);
       const yy = padT + (g / gridN) * plotH;
@@ -962,7 +973,7 @@
     const points = series.map((p, i) => ({
       x: xFor(i),
       y: yFor(valueForPoint(p)),
-      v: valueForPoint(p)
+      v: valueForPoint(p),
     }));
 
     ctx.save();
@@ -972,7 +983,7 @@
     ctx.strokeStyle = "rgba(124,92,255,.35)";
     ctx.lineWidth = 6;
     ctx.beginPath();
-    for (let i = 0; i < points.length; i++){
+    for (let i = 0; i < points.length; i++) {
       const pt = points[i];
       if (i === 0) ctx.moveTo(pt.x, pt.y);
       else ctx.lineTo(pt.x, pt.y);
@@ -982,14 +993,14 @@
     ctx.strokeStyle = "rgba(34,211,238,.85)";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    for (let i = 0; i < points.length; i++){
+    for (let i = 0; i < points.length; i++) {
       const pt = points[i];
       if (i === 0) ctx.moveTo(pt.x, pt.y);
       else ctx.lineTo(pt.x, pt.y);
     }
     ctx.stroke();
 
-    for (let i = 0; i < points.length; i++){
+    for (let i = 0; i < points.length; i++) {
       const pt = points[i];
       ctx.fillStyle = "rgba(232,236,255,.95)";
       ctx.beginPath();
@@ -997,7 +1008,7 @@
       ctx.fill();
     }
 
-    if (hoverIndex >= 0 && hoverIndex < points.length){
+    if (hoverIndex >= 0 && hoverIndex < points.length) {
       const pt = points[hoverIndex];
 
       ctx.strokeStyle = "rgba(255,255,255,.12)";
@@ -1067,15 +1078,15 @@
     const maxLabels = Math.min(6, series.length);
     const step = series.length <= maxLabels ? 1 : Math.ceil(series.length / maxLabels);
 
-    for (let i = 0; i < series.length; i += step){
+    for (let i = 0; i < series.length; i += step) {
       const x = xFor(i);
       const text = chartGranularity === "year"
         ? String(series[i].period)
-        : String(series[i].period).slice(2); 
+        : String(series[i].period).slice(2);
       ctx.fillText(text, x, padT + plotH + 8);
     }
 
-    if (series.length > 1){
+    if (series.length > 1) {
       const last = series.length - 1;
       const x = xFor(last);
       const text = chartGranularity === "year"
@@ -1087,8 +1098,8 @@
     ctx.restore();
   }
 
-  function roundRect(ctx, x, y, w, h, r){
-    const rr = Math.min(r, w/2, h/2);
+  function roundRect(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
     ctx.moveTo(x + rr, y);
     ctx.arcTo(x + w, y, x + w, y + h, rr);
@@ -1098,7 +1109,7 @@
     ctx.closePath();
   }
 
-  function pickHoverIndexFromEvent(evt){
+  function pickHoverIndexFromEvent(evt) {
     const series = getActiveSeries();
     if (!series || series.length === 0) return -1;
 
@@ -1124,13 +1135,13 @@
 
   canvas.addEventListener("mousemove", (evt) => {
     const idx = pickHoverIndexFromEvent(evt);
-    if (idx !== hoverIndex){
+    if (idx !== hoverIndex) {
       hoverIndex = idx;
       drawChart();
     }
   });
   canvas.addEventListener("mouseleave", () => {
-    if (hoverIndex !== -1){
+    if (hoverIndex !== -1) {
       hoverIndex = -1;
       drawChart();
     }
@@ -1140,7 +1151,7 @@
     drawChart();
   });
 
-  function setGranularity(g){
+  function setGranularity(g) {
     chartGranularity = g;
     granMonthBtn.setAttribute("aria-selected", g === "month" ? "true" : "false");
     granYearBtn.setAttribute("aria-selected", g === "year" ? "true" : "false");
@@ -1148,7 +1159,7 @@
     drawChart();
   }
 
-  function setMetric(m){
+  function setMetric(m) {
     chartMetric = m;
     hoverIndex = -1;
     drawChart();
@@ -1165,66 +1176,73 @@
   });
 
   window.api.onProgress(({ msg, meta, ts }) => {
-  appendLog(msg, meta, ts);
+    appendLog(msg, meta, ts);
 
-  const clearRLIfNeeded = () => {
-    if (inRateLimitMode) hardClearRateLimit();
-  };
+    const clearRLIfNeeded = () => {
+      if (inRateLimitMode) hardClearRateLimit();
+    };
 
-  if (/^Fetched\s/i.test(msg)) {
-    hardClearRateLimit();
-  }
-
-  if (meta?.status === 429 || meta?.kind === "ratelimit") {
-    if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
-  } else {
-    clearRLIfNeeded();
-  }
-
-  const friendlyKind = (rawLabel) => {
-    const l = String(rawLabel || "").trim().toLowerCase();
-    if (l === "purchase") return { noun: "purchase", chip: "Purchases" };
-    if (l === "premium") return { noun: "premium stipend", chip: "Premium" };
-    if (l === "currencypurchase") return { noun: "robux purchase credit", chip: "Robux credits" };
-    if (l.includes("premium")) return { noun: "premium transaction", chip: "Premium" };
-    if (l.includes("currency") || l.includes("robux")) return { noun: "robux transaction", chip: "Robux" };
-    return { noun: "transaction", chip: rawLabel };
-  };
-
-  const pluralize = (noun, n) => (n === 1 ? noun : `${noun}s`);
-
-  const rules = [
-    {
-      re: /^Fetched\s([\d.,\s]+)\s+(.+?)\s+tx\s+\(page\s+(\d+)\)/i,
-      run: (m) => {
-        const count = parseLocaleNumber(m[1]);
-        const rawLabel = m[2].trim();
-        const { noun, chip } = friendlyKind(rawLabel);
-        const label = pluralize(noun, count);
-        const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
-        setStatus("Scanning…", "working");
-        setProgress(pct, `Scanned ${count.toLocaleString()} ${label}`, chip ? String(chip) : null, "good");
-      },
-    },
-    { re: /Authenticating/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(3, "Authenticating…"); } },
-    { re: /Authenticated/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(6, "Authenticated. Scanning…"); } },
-    { re: /Computing totals/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing totals…", "finalizing", null); } },
-    { re: /Computing spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(97, "Computing spend over time…", "series", null); } },
-    { re: /Scanning Robux acquisition/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Scanning Robux acquisition…", "acquisition", null); } },
-    { re: /Fetching all Premium stipend transactions/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Fetching premium stipends…", "Premium", "good"); } },
-    { re: /Fetching all Robux purchase credit transactions/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Fetching robux purchase credits…", "Robux credits", "good"); } },
-    { re: /Done/i, run: () => { stopRateLimitCountdown(); setStatus("Complete"); setProgress(100, "Complete", "done", "good"); } },
-    { re: /Error:/i, run: () => { stopRateLimitCountdown(); setStatus("Error", "error"); setProgress(0, "Failed", "error", "bad"); } },
-  ];
-
-  for (const r of rules) {
-    const m = r.re.exec(msg);
-    if (m) {
-      r.run(m);
-      break;
+    if (/^Fetched\s/i.test(msg)) {
+      hardClearRateLimit();
     }
-  }
-});
+
+    if (meta?.status === 429 || meta?.kind === "ratelimit") {
+      if (typeof meta.delayMs === "number") startRateLimitCountdown(meta.delayMs);
+    } else {
+      clearRLIfNeeded();
+    }
+
+    const friendlyKind = (rawLabel) => {
+      const l = String(rawLabel || "").trim().toLowerCase();
+
+      if (l === "purchase") return { noun: "purchase", chip: "Purchases" };
+      if (l === "currencypurchase") return { noun: "robux bought", chip: "Bought" };
+      if (l === "premiumstipend") return { noun: "premium stipend", chip: "Premium" };
+      if (l === "engagementpayout") return { noun: "engagement payout", chip: "Engagement" };
+      if (l === "grouppayout") return { noun: "group payout", chip: "Group" };
+      if (l === "sale") return { noun: "sale", chip: "Sales" };
+      if (l === "traderobux") return { noun: "trade", chip: "Trades" };
+
+      if (l.includes("premium")) return { noun: "premium transaction", chip: "Premium" };
+      if (l.includes("currency") || l.includes("robux")) return { noun: "robux transaction", chip: "Robux" };
+      return { noun: "transaction", chip: rawLabel };
+    };
+
+    const pluralize = (noun, n) => (n === 1 ? noun : `${noun}s`);
+
+    const rules = [
+      {
+        re: /^Fetched\s([\d.,\s]+)\s+(.+?)\s+tx\s+\(page\s+(\d+)\)/i,
+        run: (m) => {
+          const count = parseLocaleNumber(m[1]);
+          const rawLabel = m[2].trim();
+          const { noun, chip } = friendlyKind(rawLabel);
+          const label = pluralize(noun, count);
+          const pct = Math.min(95, 10 + Math.log10(1 + count) * 18);
+          setStatus("Scanning…", "working");
+          setProgress(pct, `Scanned ${count.toLocaleString()} ${label}`, chip ? String(chip) : null, "good");
+        },
+      },
+
+      { re: /Authenticating/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(3, "Authenticating…"); } },
+      { re: /Authenticated/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(6, "Authenticated. Scanning…"); } },
+
+      { re: /Computing totals/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(95, "Computing totals…", "finalizing", null); } },
+      { re: /Computing spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
+
+      { re: /Fetching current Robux balance/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(97, "Fetching current balance…", "balance", null); } },
+      { re: /Scanning Robux inflow/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Scanning Robux inflow…", "inflow", null); } },
+      { re: /Fetching inflow:/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Fetching inflow transactions…", "inflow", "good"); } },
+
+      { re: /Done/i, run: () => { stopRateLimitCountdown(); setStatus("Complete"); setProgress(100, "Complete", "done", "good"); } },
+      { re: /Error:/i, run: () => { stopRateLimitCountdown(); setStatus("Error", "error"); setProgress(0, "Failed", "error", "bad"); } },
+    ];
+
+    for (const r of rules) {
+      const m = r.re.exec(msg);
+      if (m) { r.run(m); break; }
+    }
+  });
 
   pickBtn.addEventListener("click", async () => {
     const res = await window.api.pickCookieFile();
