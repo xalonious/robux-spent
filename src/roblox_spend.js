@@ -1,4 +1,3 @@
-// roblox_spend.js
 const fs = require("fs");
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -117,9 +116,7 @@ async function getUserId(roblosec, progress) {
   return { userId: body.id };
 }
 
-// Current Robux balance (wallet)
 async function getRobuxBalance(roblosec, progress = () => {}) {
-  // This endpoint returns current user currency (Robux) when authenticated by cookie.
   const url = "https://economy.roblox.com/v1/user/currency";
 
   const res = await fetchWithRetry(
@@ -136,7 +133,6 @@ async function getRobuxBalance(roblosec, progress = () => {}) {
   );
 
   const body = await res.json().catch(() => ({}));
-  // Typically: { robux: number }
   const robux = Number(body?.robux ?? 0) || 0;
 
   progress(`Fetched current Robux balance: R$${robux.toLocaleString()}`, {
@@ -249,11 +245,6 @@ async function fetchPurchasesAllTime(roblosec, userId, progress = () => {}, opts
   });
 }
 
-/**
- * Sums Robux for a list.
- * - For most inflow tx types: amount is usually positive; we count positives only by default.
- * - For Purchase (outflow): amount is usually negative; spend uses abs elsewhere.
- */
 function sumRobux(txList, { mode = "positiveOnly" } = {}) {
   let total = 0;
 
@@ -314,7 +305,6 @@ function computeTotals(purchases) {
 }
 
 async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
-  // EXACT types you provided — no probing/guessing:
   const TYPES = {
     CurrencyPurchase: "CurrencyPurchase",
     PremiumStipend: "PremiumStipend",
@@ -325,7 +315,6 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     Purchase: "Purchase",
   };
 
-  // Inflow (non-Purchase)
   const inflowOrder = [
     ["CurrencyPurchase", "Robux bought (money)"],
     ["PremiumStipend", "Premium stipend"],
@@ -349,7 +338,6 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
       label: TYPES[key],
     });
 
-    // TradeRobux can be positive or negative; you want ONLY positive gains.
     const robux =
       key === "TradeRobux"
         ? sumRobux(tx, { mode: "positiveOnly" })
@@ -372,7 +360,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
 }
 
 function computeSpendOverTime(purchases, granularity = "month") {
-  const map = new Map(); // key -> { robux, purchaseCount }
+  const map = new Map(); 
 
   for (const tx of purchases) {
     if (tx?.currency?.type !== "Robux") continue;

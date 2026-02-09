@@ -1,12 +1,10 @@
-// main.js (fully updated for balance + inflow + outflow + existing insights/chart)
-
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const {
   fetchAllPurchases,
   computeTotals,
-  computeRobuxFlows,            // ✅ new (replaces computeRobuxAcquisitionEstimates)
+  computeRobuxFlows,            
   computeSpendOverTime,
   computeInsightsFromSeries,
   constants,
@@ -40,7 +38,7 @@ function normalizeCookie(raw) {
   let cookie = String(raw ?? "").trim();
   cookie = cookie.replace(/^ROBLOX_COOKIE=/i, "").trim();
   cookie = cookie.replace(/^\.ROBLOSECURITY=/i, "").trim();
-  cookie = cookie.replace(/^"+|"+$/g, "").trim(); // strip quotes
+  cookie = cookie.replace(/^"+|"+$/g, "").trim(); 
   return cookie;
 }
 
@@ -132,7 +130,6 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const { userId } = await fetchAllPurchases.getUserId(cookie, progress);
     progress(`Authenticated (userId ${userId}). Starting scan…`);
 
-    // ✅ outflow (purchases) + insights/chart use Purchase only (your existing logic)
     const checkpointPath = path.join(app.getPath("userData"), "checkpoint.json");
 
     const purchases = await fetchAllPurchases.fetchPurchasesAllTime(cookie, userId, progress, {
@@ -147,18 +144,16 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const yearly = computeSpendOverTime(purchases, "year");
     const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
 
-    // ✅ new: current balance
     progress("Fetching current Robux balance…");
     const balance = await fetchAllPurchases.getRobuxBalance(cookie, progress);
 
-    // ✅ new: inflow breakdown (CurrencyPurchase, PremiumStipend, EngagementPayout, GroupPayout, Sale, TradeRobux(+ only))
     progress("Scanning Robux inflow…");
     const { inflow } = await computeRobuxFlows(cookie, userId, progress);
 
     const totals = {
-      ...spendTotals, // outflow totals
-      balance,        // { robux }
-      inflow,         // inflow totals + breakdown
+      ...spendTotals, 
+      balance,        
+      inflow,         
     };
 
     const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
