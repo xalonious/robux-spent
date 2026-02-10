@@ -19,7 +19,9 @@ with automatic handling for rate limits.
   - Engagement payouts
   - Group payouts
   - Sales
-  - Trade gains 
+  - Trade gains
+  - Estimated USD spent on Robux
+  - Estimated USD spent on Premium
 - **Robux outflow**
   - Total spent
   - In-game vs other purchases
@@ -37,9 +39,11 @@ with automatic handling for rate limits.
 - Cookie file **validation before scanning**
 - Results exported as JSON:
   - `purchases_raw.json`
+  - `usd_source_tx.json`
   - `spend_totals.json`
 
-> USD values are estimates using a fixed conversion: **1000 Robux = $10**.
+> USD values are estimates using a fixed conversion: **1000 Robux = $10**.  
+> The USD chart is derived from **Robux purchases and Premium-related transactions**, not total Robux spent.
 
 ---
 
