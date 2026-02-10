@@ -855,7 +855,7 @@
 
   function valueForPoint(p) {
     if (!p) return 0;
-    return chartMetric === "usd" ? Number(p.usdEstimate ?? 0) : Number(p.robux ?? 0);
+    return chartMetric === "usd" ? Number(p.usd ?? 0) : Number(p.robux ?? 0);
   }
 
   function labelForPoint(p) {
@@ -1228,7 +1228,11 @@
       { re: /Authenticated/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(6, "Authenticated. Scanning…"); } },
 
       { re: /Computing totals/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(95, "Computing totals…", "finalizing", null); } },
+
+      // Keep the old matcher AND support the new messages from updated main.js
       { re: /Computing spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
+      { re: /Computing Robux spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
+      { re: /Computing USD spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
 
       { re: /Fetching current Robux balance/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(97, "Fetching current balance…", "balance", null); } },
       { re: /Scanning Robux inflow/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(98, "Scanning Robux inflow…", "inflow", null); } },

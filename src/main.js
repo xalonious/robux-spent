@@ -4,8 +4,10 @@ const fs = require("fs");
 const {
   fetchAllPurchases,
   computeTotals,
-  computeRobuxFlows,            
-  computeSpendOverTime,
+  computeRobuxFlows,
+  computeRobuxSpendOverTime,
+  computeUsdSpendOverTimeFromInflow,
+  mergeRobuxAndUsdSeries,
   computeInsightsFromSeries,
   constants,
 } = require("./roblox_spend");
@@ -38,7 +40,7 @@ function normalizeCookie(raw) {
   let cookie = String(raw ?? "").trim();
   cookie = cookie.replace(/^ROBLOX_COOKIE=/i, "").trim();
   cookie = cookie.replace(/^\.ROBLOSECURITY=/i, "").trim();
-  cookie = cookie.replace(/^"+|"+$/g, "").trim(); 
+  cookie = cookie.replace(/^"+|"+$/g, "").trim();
   return cookie;
 }
 
@@ -139,27 +141,37 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     progress(`Computing totals from ${purchases.length.toLocaleString()} purchases…`);
     const spendTotals = computeTotals(purchases);
 
-    progress("Computing spend over time…");
-    const monthly = computeSpendOverTime(purchases, "month");
-    const yearly = computeSpendOverTime(purchases, "year");
-    const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
+    progress("Computing Robux spend over time…");
+    const robuxMonthly = computeRobuxSpendOverTime(purchases, "month");
+    const robuxYearly = computeRobuxSpendOverTime(purchases, "year");
 
     progress("Fetching current Robux balance…");
     const balance = await fetchAllPurchases.getRobuxBalance(cookie, progress);
 
     progress("Scanning Robux inflow…");
-    const { inflow } = await computeRobuxFlows(cookie, userId, progress);
+    const { inflow, usdTx } = await computeRobuxFlows(cookie, userId, progress);
+
+    progress("Computing USD spend over time (from Robux/Premium purchases)…");
+    const usdMonthly = computeUsdSpendOverTimeFromInflow(usdTx, "month");
+    const usdYearly = computeUsdSpendOverTimeFromInflow(usdTx, "year");
+
+    const monthly = mergeRobuxAndUsdSeries(robuxMonthly, usdMonthly);
+    const yearly = mergeRobuxAndUsdSeries(robuxYearly, usdYearly);
+
+    const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
 
     const totals = {
-      ...spendTotals, 
-      balance,        
-      inflow,         
+      ...spendTotals,
+      balance,
+      inflow,
     };
 
     const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
 
+    // Persist outputs
     const dataDir = app.getPath("userData");
     fs.writeFileSync(path.join(dataDir, "purchases_raw.json"), JSON.stringify(purchases, null, 2));
+    fs.writeFileSync(path.join(dataDir, "usd_source_tx.json"), JSON.stringify(usdTx, null, 2));
     fs.writeFileSync(path.join(dataDir, "spend_totals.json"), JSON.stringify({ totals, series, insights }, null, 2));
 
     progress(`Saved results to userData`, { level: "ok" });
