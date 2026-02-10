@@ -168,7 +168,6 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
 
     const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
 
-    // Persist outputs
     const dataDir = app.getPath("userData");
     fs.writeFileSync(path.join(dataDir, "purchases_raw.json"), JSON.stringify(purchases, null, 2));
     fs.writeFileSync(path.join(dataDir, "usd_source_tx.json"), JSON.stringify(usdTx, null, 2));

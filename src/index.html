@@ -516,7 +516,15 @@
                 <div class="k">Trade gains</div>
                 <div class="v" id="inflowTradeRobux">R$0</div>
               </div>
-            </div>
+              <div class="card">
+                <div class="k">Est. USD spent on Robux</div>
+                <div class="v" id="usdSpentOnRobux">$0.00</div>
+              </div>
+              <div class="card">
+                <div class="k">Est. USD spent on Premium</div>
+                <div class="v" id="usdSpentOnPremium">$0.00</div>
+              </div>
+              </div>
 
             <div class="label">Robux outflow</div>
             <div class="grid">
@@ -824,6 +832,11 @@
     document.getElementById("inflowSale").textContent = fmtRobux(getR("Sale"));
     document.getElementById("inflowTradeRobux").textContent = fmtRobux(getR("TradeRobux"));
 
+    const getUSD = (k) => (b?.[k]?.usdEstimate ?? 0);
+    document.getElementById("usdSpentOnRobux").textContent = fmtUSD(getUSD("CurrencyPurchase"));
+    document.getElementById("usdSpentOnPremium").textContent = fmtUSD(getUSD("PremiumStipend"));
+
+
     statsSection.style.display = "block";
   }
 
@@ -864,7 +877,7 @@
   }
 
   function metricLabel() {
-    return chartMetric === "usd" ? "USD spent" : "Robux spent";
+    return chartMetric === "usd" ? "Estimated USD spent" : "Robux spent";
   }
 
   function resizeCanvasToCSS() {
@@ -1229,7 +1242,6 @@
 
       { re: /Computing totals/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(95, "Computing totals…", "finalizing", null); } },
 
-      // Keep the old matcher AND support the new messages from updated main.js
       { re: /Computing spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
       { re: /Computing Robux spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
       { re: /Computing USD spend over time/i, run: () => { hardClearRateLimit(); setStatus("Scanning…", "working"); setProgress(96, "Computing spend over time…", "series", null); } },
