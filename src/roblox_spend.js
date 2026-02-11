@@ -155,7 +155,7 @@ async function fetchTransactionsByTypeAllTime(
     label = transactionType,
   } = {}
 ) {
-  const pageLimit = 50;
+  const pageLimit = 100;
   const pageGapMin = 1400;
   const pageGapMax = 2600;
 
