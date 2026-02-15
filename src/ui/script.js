@@ -141,7 +141,6 @@ function appendLog(msg, meta = {}, ts = Date.now()) {
 
   if (meta.kind === "ratelimit") line.classList.add("warn");
   if (meta.kind === "retry") line.classList.add("warn");
-  if (meta.kind === "checkpoint" || meta.kind === "checkpoint-resume") line.classList.add("muted");
 
   line.textContent = `[${hh}:${mm}:${ss}] ${msg}`;
   logEl.appendChild(line);

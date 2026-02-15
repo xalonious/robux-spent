@@ -1,5 +1,3 @@
-const fs = require("fs");
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const USD_PER_ROBUX = 0.01;
@@ -149,11 +147,7 @@ async function fetchTransactionsByTypeAllTime(
   userId,
   transactionType,
   progress = () => {},
-  {
-    checkpointPath = null,
-    enableCheckpoint = false,
-    label = transactionType,
-  } = {}
+  { label = transactionType } = {}
 ) {
   const pageLimit = 100;
   const pageGapMin = 1400;
@@ -162,21 +156,6 @@ async function fetchTransactionsByTypeAllTime(
   let cursor = null;
   let out = [];
   let page = 0;
-
-  if (enableCheckpoint && checkpointPath && fs.existsSync(checkpointPath)) {
-    try {
-      const ck = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
-      if (ck?.transactionType === transactionType) {
-        cursor = ck.cursor ?? null;
-        out = ck.data ?? [];
-        page = ck.page ?? 0;
-        progress(`Resuming checkpoint: ${label} page=${page}, items=${out.length.toLocaleString()}`, {
-          level: "warn",
-          kind: "checkpoint-resume",
-        });
-      }
-    } catch {}
-  }
 
   while (true) {
     const qp = new URLSearchParams();
@@ -214,15 +193,6 @@ async function fetchTransactionsByTypeAllTime(
       count: out.length,
     });
 
-    if (enableCheckpoint && checkpointPath && page % 2 === 0) {
-      try {
-        fs.writeFileSync(
-          checkpointPath,
-          JSON.stringify({ transactionType, cursor: nextCursor, data: out, page }, null, 2)
-        );
-      } catch {}
-    }
-
     if (!nextCursor || data.length === 0) break;
 
     cursor = nextCursor;
@@ -231,19 +201,11 @@ async function fetchTransactionsByTypeAllTime(
     await sleep(gap);
   }
 
-  if (enableCheckpoint && checkpointPath) {
-    try {
-      fs.unlinkSync(checkpointPath);
-    } catch {}
-  }
-
   return out;
 }
 
-async function fetchPurchasesAllTime(roblosec, userId, progress = () => {}, opts = {}) {
+async function fetchPurchasesAllTime(roblosec, userId, progress = () => {}) {
   return fetchTransactionsByTypeAllTime(roblosec, userId, "Purchase", progress, {
-    checkpointPath: opts.checkpointPath,
-    enableCheckpoint: true,
     label: "Purchase",
   });
 }
@@ -273,9 +235,7 @@ function isGameLinkedPurchase(tx) {
   const place = d.place || null;
   return (
     !!place &&
-    (place.universeId ||
-      place.placeId ||
-      (typeof place.name === "string" && place.name.trim().length > 0))
+    (place.universeId || place.placeId || (typeof place.name === "string" && place.name.trim().length > 0))
   );
 }
 
@@ -357,7 +317,6 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     progress(`Fetching inflow: ${label} (${TYPES[key]})…`, { level: "muted", kind: "inflow" });
 
     const tx = await fetchTransactionsByTypeAllTime(roblosec, userId, TYPES[key], progress, {
-      enableCheckpoint: false,
       label: TYPES[key],
     });
 
@@ -544,16 +503,18 @@ function computeTopGamesFunded(purchases, topN = 5) {
     const placeName = typeof place.name === "string" ? place.name.trim() : "";
 
     const key =
-      universeId != null ? `u:${universeId}` :
-      placeId != null ? `p:${placeId}` :
-      placeName ? `n:${placeName.toLowerCase()}` :
-      null;
+      universeId != null
+        ? `u:${universeId}`
+        : placeId != null
+        ? `p:${placeId}`
+        : placeName
+        ? `n:${placeName.toLowerCase()}`
+        : null;
 
     if (!key) continue;
 
     const cur =
-      map.get(key) ||
-      {
+      map.get(key) || {
         robux: 0,
         usdEstimate: 0,
         purchaseCount: 0,

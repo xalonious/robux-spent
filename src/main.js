@@ -134,11 +134,7 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const { userId } = await fetchAllPurchases.getUserId(cookie, progress);
     progress(`Authenticated (userId ${userId}). Starting scan…`);
 
-    const checkpointPath = path.join(app.getPath("userData"), "checkpoint.json");
-
-    const purchases = await fetchAllPurchases.fetchPurchasesAllTime(cookie, userId, progress, {
-      checkpointPath,
-    });
+    const purchases = await fetchAllPurchases.fetchPurchasesAllTime(cookie, userId, progress);
 
     progress(`Computing totals from ${purchases.length.toLocaleString()} purchases…`);
     const spendTotals = computeTotals(purchases);
