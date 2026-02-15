@@ -85,15 +85,17 @@
                 <div class="k">Trade gains</div>
                 <div class="v" id="inflowTradeRobux">R$0</div>
               </div>
+
               <div class="card">
                 <div class="k">Est. USD spent on Robux</div>
                 <div class="v" id="usdSpentOnRobux">$0.00</div>
               </div>
+
               <div class="card">
                 <div class="k">Est. USD spent on Premium</div>
                 <div class="v" id="usdSpentOnPremium">$0.00</div>
               </div>
-              </div>
+            </div>
 
             <div class="label">Robux outflow</div>
             <div class="grid">
@@ -116,6 +118,7 @@
             </div>
 
             <div class="label">Insights</div>
+
             <div class="grid">
               <div class="card">
                 <div class="k">Average per month</div>
@@ -135,12 +138,59 @@
               <div class="card">
                 <div class="k">Peak spending month</div>
 
-                <div class="badgeRow">
-                  <span class="badge" id="peakBadge" title="😬 Peak spending month">😬 Peak</span>
+                <div class="metaRow">
                   <span class="badgeMeta" id="peakMonthLabel">—</span>
                 </div>
 
                 <div class="v" id="peakMonthRobux">R$0</div>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top: 12px;">
+              <div class="card">
+                <div class="k">Top 5 most expensive purchases</div>
+                <div class="list" id="topPurchasesList">
+                  <div class="empty" id="topPurchasesEmpty">—</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="k">Top 5 games funded</div>
+                <div class="list" id="topGamesList">
+                  <div class="empty" id="topGamesEmpty">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top: 12px;">
+              <div class="card">
+                <div class="k">Biggest spending day ever</div>
+
+                <div class="metaRow" style="margin-top: 8px;">
+                  <span class="badgeMeta" id="bigDayLabel">—</span>
+                </div>
+
+                <div class="v" id="bigDayRobux">R$0</div>
+
+                <div class="subk" style="margin-top: 10px;">Top purchases that day</div>
+                <div class="list" id="bigDayTopList">
+                  <div class="empty" id="bigDayTopEmpty">—</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="k">Regret Simulator</div>
+
+                <div class="metaRow" style="margin-top: 8px;">
+                  <span class="badgeMeta" id="regretMeta">—</span>
+                </div>
+
+                <div class="v" id="regretTotalUsd">$0.00</div>
+
+                <div class="subk" style="margin-top: 10px;">You could’ve gotten instead</div>
+                <div class="list" id="regretList">
+                  <div class="empty" id="regretEmpty">—</div>
+                </div>
               </div>
             </div>
 
@@ -206,6 +256,7 @@
         </div>
       </div>
     </div>
+
     <script src="script.js"></script>
   </body>
 </html>

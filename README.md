@@ -1,53 +1,93 @@
 # Robux Spent
 
-An Electron app that scans your Roblox transaction history to show how your Robux
-**comes in**, **goes out**, and how your spending changes over time.
+An Electron app that scans your Roblox transaction history to show how your Robux  
+**comes in**, **goes out**, and how your spending evolves over time — with detailed breakdowns and “damage reports”.
 
-The app uses your `.ROBLOSECURITY` cookie to authenticate and fetch Roblox economy data,
+The app uses your `.ROBLOSECURITY` cookie to authenticate and fetch Roblox economy data,  
 with automatic handling for rate limits.
 
 ---
 
-## Core features
+## 🚀 Full Account Scan
 
 - Scan **all-time Roblox transactions**
-- **Current Robux balance**
-- **Robux inflow**
-  - Total inflow
-  - Robux bought
-  - Premium stipends
-  - Engagement payouts
-  - Group payouts
-  - Sales
-  - Trade gains
-  - Estimated USD spent on Robux
-  - Estimated USD spent on Premium
-- **Robux outflow**
-  - Total spent
-  - In-game vs other purchases
-  - Purchase count
-- **Insights**
-  - Average spend per month
-  - Average spend per year
-  - Average spend per purchase
-  - Peak spending month (with purchase count)
-- **Spending over time chart**
-  - Monthly / yearly view
-  - Robux / USD toggle
-  - Hover points for exact values
-- Live log with **rate-limit detection and retry countdown**
-- Cookie file **validation before scanning**
+- Automatic rate-limit handling with retry + countdown
+- Cookie validation before scanning
 - Results exported as JSON:
   - `purchases_raw.json`
   - `usd_source_tx.json`
   - `spend_totals.json`
 
-> USD values are estimates using a fixed conversion: **1000 Robux = $10**.  
-> The USD chart is derived from **Robux purchases and Premium-related transactions**, not total Robux spent.
+---
+
+## 💰 Robux Inflow
+
+- Total inflow
+- Current Robux balance
+- Robux bought
+- Premium stipends
+- Engagement payouts
+- Group payouts
+- Sales
+- Trade gains
+- Estimated USD spent on:
+  - Robux purchases
+  - Premium
+
+> USD values are estimates using a fixed conversion: **1000 Robux = $10**.
 
 ---
 
-## Run
+## 📉 Robux Outflow
+
+- Total Robux spent
+- In-game vs other purchases
+- Total purchase count
+
+---
+
+## 📊 Insights
+
+- Average spend per month
+- Average spend per year
+- Average spend per purchase
+- Peak spending month (with purchase count)
+
+### Breakdown Highlights
+
+- Top 5 most expensive purchases
+- Top 5 games funded (grouped by universe)
+- Biggest spending day ever  
+  - Includes the top purchases made that day
+
+---
+
+## 💸 Regret Simulator
+
+Calculates your **actual USD spent** (from Robux purchases + Premium transactions)  
+and shows what you could’ve bought instead.
+
+Examples:
+- Game consoles
+- GPUs
+- iPhones
+- Fast food meals
+- etc.
+
+Based on real USD transactions — not Robux-to-USD estimates from spending.
+
+---
+
+## 📈 Spending Over Time Chart
+
+- Monthly / yearly toggle
+- Robux / USD view
+- Hover points for exact values
+- Auto-scaled axes
+
+---
+
+## ▶️ Run
 
 ```bash
 npm install

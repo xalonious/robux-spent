@@ -9,6 +9,8 @@ const {
   computeUsdSpendOverTimeFromInflow,
   mergeRobuxAndUsdSeries,
   computeInsightsFromSeries,
+  computeLeaderboards,
+  computeRegretSimulatorFromInflow, 
   constants,
 } = require("./roblox_spend");
 
@@ -158,7 +160,17 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const monthly = mergeRobuxAndUsdSeries(robuxMonthly, usdMonthly);
     const yearly = mergeRobuxAndUsdSeries(robuxYearly, usdYearly);
 
-    const insights = computeInsightsFromSeries(monthly, yearly, purchases.length);
+    progress("Computing leaderboards…");
+    const leaderboards = computeLeaderboards(purchases, { topN: 5 });
+
+    progress("Computing regret simulator…");
+    const regret = computeRegretSimulatorFromInflow(inflow);
+
+    const insights = {
+      ...computeInsightsFromSeries(monthly, yearly, purchases.length),
+      leaderboards,
+      regret,
+    };
 
     const totals = {
       ...spendTotals,
@@ -171,7 +183,10 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const dataDir = app.getPath("userData");
     fs.writeFileSync(path.join(dataDir, "purchases_raw.json"), JSON.stringify(purchases, null, 2));
     fs.writeFileSync(path.join(dataDir, "usd_source_tx.json"), JSON.stringify(usdTx, null, 2));
-    fs.writeFileSync(path.join(dataDir, "spend_totals.json"), JSON.stringify({ totals, series, insights }, null, 2));
+    fs.writeFileSync(
+      path.join(dataDir, "spend_totals.json"),
+      JSON.stringify({ totals, series, insights }, null, 2)
+    );
 
     progress(`Saved results to userData`, { level: "ok" });
     progress(`Directory: ${dataDir}`, { level: "ok" });

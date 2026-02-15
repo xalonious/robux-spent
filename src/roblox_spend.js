@@ -232,7 +232,9 @@ async function fetchTransactionsByTypeAllTime(
   }
 
   if (enableCheckpoint && checkpointPath) {
-    try { fs.unlinkSync(checkpointPath); } catch {}
+    try {
+      fs.unlinkSync(checkpointPath);
+    } catch {}
   }
 
   return out;
@@ -266,6 +268,32 @@ function sumRobux(txList, { mode = "positiveOnly" } = {}) {
   return total;
 }
 
+function isGameLinkedPurchase(tx) {
+  const d = tx?.details || {};
+  const place = d.place || null;
+  return (
+    !!place &&
+    (place.universeId ||
+      place.placeId ||
+      (typeof place.name === "string" && place.name.trim().length > 0))
+  );
+}
+
+function spendForTx(tx) {
+  if (tx?.currency?.type !== "Robux") return 0;
+  const amt = Number(tx.currency?.amount ?? 0) || 0;
+  return Math.abs(amt);
+}
+
+function txDateUTCKey(created) {
+  const d = created ? new Date(created) : null;
+  if (!d || Number.isNaN(d.getTime())) return null;
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function computeTotals(purchases) {
   let totalSpentAllPurchases = 0;
   let totalSpentInGames = 0;
@@ -275,18 +303,10 @@ function computeTotals(purchases) {
   for (const tx of purchases) {
     if (tx?.currency?.type !== "Robux") continue;
 
-    const amt = Number(tx.currency?.amount ?? 0) || 0;
-    const spent = Math.abs(amt);
+    const spent = spendForTx(tx);
     totalSpentAllPurchases += spent;
 
-    const d = tx.details || {};
-    const place = d.place || null;
-
-    const isGameLinked =
-      !!place &&
-      (place.universeId ||
-        place.placeId ||
-        (typeof place.name === "string" && place.name.trim().length > 0));
+    const isGameLinked = isGameLinkedPurchase(tx);
 
     if (isGameLinked) {
       totalSpentInGames += spent;
@@ -377,8 +397,7 @@ function computeRobuxSpendOverTime(purchases, granularity = "month") {
     const m = d.getUTCMonth() + 1;
     const key = granularity === "year" ? String(y) : `${y}-${String(m).padStart(2, "0")}`;
 
-    const amt = Number(tx.currency?.amount ?? 0) || 0;
-    const spent = Math.abs(amt);
+    const spent = spendForTx(tx);
 
     const cur = map.get(key) || { robuxSpent: 0, purchaseCount: 0 };
     cur.robuxSpent += spent;
@@ -450,12 +469,194 @@ function computeSpendOverTime(purchases, granularity = "month") {
   return robuxSeries.map((p) => ({
     period: p.period,
     robux: p.robuxSpent,
-    usd: 0, 
+    usd: 0,
     purchaseCount: p.purchaseCount,
   }));
 }
 
-function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTotal) {
+function computeRegretSimulatorFromInflow(inflow) {
+  const b = inflow?.breakdown || {};
+  const robuxUsd = Number(b?.CurrencyPurchase?.usdEstimate ?? 0) || 0;
+  const premiumUsd = Number(b?.PremiumStipend?.usdEstimate ?? 0) || 0;
+
+  const usd = Math.round((robuxUsd + premiumUsd) * 100) / 100;
+
+  const equivalents = [
+    { label: "AAA games ($70 each)", value: Math.floor(usd / 70) },
+    { label: "PS5 consoles ($500 each)", value: Math.floor(usd / 500) },
+    { label: "Months of Netflix ($15/mo)", value: Math.floor(usd / 15) },
+    { label: "Big Macs ($5 each)", value: Math.floor(usd / 5) },
+  ];
+
+  return {
+    usd,
+    breakdown: {
+      robuxUsd: Math.round(robuxUsd * 100) / 100,
+      premiumUsd: Math.round(premiumUsd * 100) / 100,
+    },
+    equivalents,
+  };
+}
+
+function computeTopExpensivePurchases(purchases, topN = 5) {
+  const rows = [];
+
+  for (const tx of purchases || []) {
+    if (tx?.currency?.type !== "Robux") continue;
+    const spent = spendForTx(tx);
+    if (!spent) continue;
+
+    const d = tx.details || {};
+    const place = d.place || null;
+
+    rows.push({
+      created: tx.created || null,
+      robux: spent,
+      usdEstimate: Math.round(spent * USD_PER_ROBUX * 100) / 100,
+
+      transactionType: tx.transactionType || "Purchase",
+      itemType: d.type || null,
+      name: d.name || null,
+
+      placeName: place?.name || null,
+      universeId: place?.universeId ?? null,
+      placeId: place?.placeId ?? null,
+    });
+  }
+
+  rows.sort((a, b) => b.robux - a.robux);
+  return rows.slice(0, Math.max(0, topN | 0));
+}
+
+function computeTopGamesFunded(purchases, topN = 5) {
+  const map = new Map();
+
+  for (const tx of purchases || []) {
+    if (!isGameLinkedPurchase(tx)) continue;
+
+    const spent = spendForTx(tx);
+    if (!spent) continue;
+
+    const d = tx.details || {};
+    const place = d.place || {};
+    const universeId = place.universeId ?? null;
+    const placeId = place.placeId ?? null;
+    const placeName = typeof place.name === "string" ? place.name.trim() : "";
+
+    const key =
+      universeId != null ? `u:${universeId}` :
+      placeId != null ? `p:${placeId}` :
+      placeName ? `n:${placeName.toLowerCase()}` :
+      null;
+
+    if (!key) continue;
+
+    const cur =
+      map.get(key) ||
+      {
+        robux: 0,
+        usdEstimate: 0,
+        purchaseCount: 0,
+        universeId,
+        placeId,
+        placeName: placeName || null,
+        firstPurchaseAt: null,
+        lastPurchaseAt: null,
+      };
+
+    cur.robux += spent;
+    cur.usdEstimate = Math.round(cur.robux * USD_PER_ROBUX * 100) / 100;
+    cur.purchaseCount += 1;
+
+    const created = tx.created ? new Date(tx.created) : null;
+    if (created && !Number.isNaN(created.getTime())) {
+      const iso = created.toISOString();
+      if (!cur.firstPurchaseAt || iso < cur.firstPurchaseAt) cur.firstPurchaseAt = iso;
+      if (!cur.lastPurchaseAt || iso > cur.lastPurchaseAt) cur.lastPurchaseAt = iso;
+    }
+
+    if (cur.universeId == null && universeId != null) cur.universeId = universeId;
+    if (cur.placeId == null && placeId != null) cur.placeId = placeId;
+    if (!cur.placeName && placeName) cur.placeName = placeName;
+
+    map.set(key, cur);
+  }
+
+  const rows = [...map.values()];
+  rows.sort((a, b) => b.robux - a.robux);
+  return rows.slice(0, Math.max(0, topN | 0));
+}
+
+function computeBiggestSpendingDayEver(purchases, { includeTopPurchases = true, topPurchasesN = 5 } = {}) {
+  const map = new Map();
+
+  for (const tx of purchases || []) {
+    if (tx?.currency?.type !== "Robux") continue;
+
+    const spent = spendForTx(tx);
+    if (!spent) continue;
+
+    const dayKey = txDateUTCKey(tx.created);
+    if (!dayKey) continue;
+
+    const cur = map.get(dayKey) || { robux: 0, purchaseCount: 0, purchases: [] };
+    cur.robux += spent;
+    cur.purchaseCount += 1;
+
+    if (includeTopPurchases) {
+      const d = tx.details || {};
+      const place = d.place || null;
+      cur.purchases.push({
+        created: tx.created || null,
+        robux: spent,
+        usdEstimate: Math.round(spent * USD_PER_ROBUX * 100) / 100,
+        itemType: d.type || null,
+        name: d.name || null,
+        placeName: place?.name || null,
+        universeId: place?.universeId ?? null,
+        placeId: place?.placeId ?? null,
+      });
+    }
+
+    map.set(dayKey, cur);
+  }
+
+  let bestDay = null;
+  for (const [day, v] of map.entries()) {
+    if (!bestDay || v.robux > bestDay.robux) {
+      bestDay = { day, ...v };
+    }
+  }
+
+  if (!bestDay) return null;
+
+  const out = {
+    day: bestDay.day,
+    robux: bestDay.robux,
+    usdEstimate: Math.round(bestDay.robux * USD_PER_ROBUX * 100) / 100,
+    purchaseCount: bestDay.purchaseCount,
+  };
+
+  if (includeTopPurchases) {
+    const top = (bestDay.purchases || []).slice().sort((a, b) => b.robux - a.robux);
+    out.topPurchases = top.slice(0, Math.max(0, topPurchasesN | 0));
+  }
+
+  return out;
+}
+
+function computeLeaderboards(purchases, { topN = 5 } = {}) {
+  return {
+    topExpensivePurchases: computeTopExpensivePurchases(purchases, topN),
+    topGamesFunded: computeTopGamesFunded(purchases, topN),
+    biggestSpendingDayEver: computeBiggestSpendingDayEver(purchases, {
+      includeTopPurchases: true,
+      topPurchasesN: topN,
+    }),
+  };
+}
+
+function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTotal, purchasesMaybe = null) {
   const safe = (n) => (Number.isFinite(n) ? n : 0);
 
   const peakMonth = (monthlySeries || []).reduce(
@@ -481,7 +682,7 @@ function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTo
   const avgUsdPerYear = yearsWithSpend ? totalUsd / yearsWithSpend : avgPerYear * USD_PER_ROBUX;
   const avgUsdPerPurchase = purchasesCountTotal ? totalUsd / purchasesCountTotal : avgPerPurchase * USD_PER_ROBUX;
 
-  return {
+  const out = {
     peakMonth: peakMonth
       ? {
           period: peakMonth.period,
@@ -509,6 +710,12 @@ function computeInsightsFromSeries(monthlySeries, yearlySeries, purchasesCountTo
       usdPerPurchase: Math.round(avgUsdPerPurchase * 100) / 100,
     },
   };
+
+  if (Array.isArray(purchasesMaybe) && purchasesMaybe.length) {
+    out.leaderboards = computeLeaderboards(purchasesMaybe, { topN: 5 });
+  }
+
+  return out;
 }
 
 exports.fetchAllPurchases = { getUserId, fetchPurchasesAllTime, getRobuxBalance };
@@ -523,5 +730,12 @@ exports.mergeRobuxAndUsdSeries = mergeRobuxAndUsdSeries;
 exports.computeSpendOverTime = computeSpendOverTime;
 
 exports.computeInsightsFromSeries = computeInsightsFromSeries;
+
+exports.computeTopExpensivePurchases = computeTopExpensivePurchases;
+exports.computeTopGamesFunded = computeTopGamesFunded;
+exports.computeBiggestSpendingDayEver = computeBiggestSpendingDayEver;
+exports.computeLeaderboards = computeLeaderboards;
+
+exports.computeRegretSimulatorFromInflow = computeRegretSimulatorFromInflow;
 
 exports.constants = { USD_PER_ROBUX };
