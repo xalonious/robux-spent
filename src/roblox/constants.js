@@ -1,0 +1,3 @@
+const USD_PER_ROBUX = 0.01;
+
+exports.USD_PER_ROBUX = USD_PER_ROBUX;

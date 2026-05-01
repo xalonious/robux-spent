@@ -38,8 +38,8 @@
           <div class="progressWrap" id="progressSection" style="display: none;">
             <div class="bar"><div class="fill" id="progressFill"></div></div>
             <div class="progressText">
-              <span id="progressText">Starting…</span>
-              <span class="chip" id="progressChip" style="display: none;">—</span>
+              <span id="progressText">Starting...</span>
+              <span class="chip" id="progressChip" style="display: none;">-</span>
             </div>
           </div>
 
@@ -56,42 +56,47 @@
                 <div class="v" id="robuxBalance">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Robux bought</div>
                 <div class="v" id="inflowCurrencyPurchase">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Premium stipends</div>
                 <div class="v" id="inflowPremiumStipend">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Engagement payouts</div>
                 <div class="v" id="inflowEngagementPayout">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Group payouts</div>
                 <div class="v" id="inflowGroupPayout">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Sales</div>
                 <div class="v" id="inflowSale">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Trade gains</div>
                 <div class="v" id="inflowTradeRobux">R$0</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
+                <div class="k">Transfers received</div>
+                <div class="v" id="inflowRobuxTransfers">R$0</div>
+              </div>
+
+              <div class="card" data-hide-zero>
                 <div class="k">Est. USD spent on Robux</div>
                 <div class="v" id="usdSpentOnRobux">$0.00</div>
               </div>
 
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Est. USD spent on Premium</div>
                 <div class="v" id="usdSpentOnPremium">$0.00</div>
               </div>
@@ -103,17 +108,21 @@
                 <div class="k">Total spent</div>
                 <div class="v" id="totalSpent">R$0</div>
               </div>
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Purchases</div>
                 <div class="v" id="purchaseCount">0</div>
               </div>
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">In games</div>
                 <div class="v" id="gameSpent">R$0</div>
               </div>
-              <div class="card">
+              <div class="card" data-hide-zero>
                 <div class="k">Other</div>
                 <div class="v" id="otherSpent">R$0</div>
+              </div>
+              <div class="card" data-hide-zero>
+                <div class="k">Transfers sent</div>
+                <div class="v" id="outflowRobuxTransfers">R$0</div>
               </div>
             </div>
 
@@ -139,7 +148,7 @@
                 <div class="k">Peak spending month</div>
 
                 <div class="metaRow">
-                  <span class="badgeMeta" id="peakMonthLabel">—</span>
+                  <span class="badgeMeta" id="peakMonthLabel">-</span>
                 </div>
 
                 <div class="v" id="peakMonthRobux">R$0</div>
@@ -150,14 +159,14 @@
               <div class="card">
                 <div class="k">Top 5 most expensive purchases</div>
                 <div class="list" id="topPurchasesList">
-                  <div class="empty" id="topPurchasesEmpty">—</div>
+                  <div class="empty" id="topPurchasesEmpty">-</div>
                 </div>
               </div>
 
               <div class="card">
                 <div class="k">Top 5 games funded</div>
                 <div class="list" id="topGamesList">
-                  <div class="empty" id="topGamesEmpty">—</div>
+                  <div class="empty" id="topGamesEmpty">-</div>
                 </div>
               </div>
             </div>
@@ -167,14 +176,14 @@
                 <div class="k">Biggest spending day ever</div>
 
                 <div class="metaRow" style="margin-top: 8px;">
-                  <span class="badgeMeta" id="bigDayLabel">—</span>
+                  <span class="badgeMeta" id="bigDayLabel">-</span>
                 </div>
 
                 <div class="v" id="bigDayRobux">R$0</div>
 
                 <div class="subk" style="margin-top: 10px;">Top purchases that day</div>
                 <div class="list" id="bigDayTopList">
-                  <div class="empty" id="bigDayTopEmpty">—</div>
+                  <div class="empty" id="bigDayTopEmpty">-</div>
                 </div>
               </div>
 
@@ -182,14 +191,14 @@
                 <div class="k">Regret Simulator</div>
 
                 <div class="metaRow" style="margin-top: 8px;">
-                  <span class="badgeMeta" id="regretMeta">—</span>
+                  <span class="badgeMeta" id="regretMeta">-</span>
                 </div>
 
                 <div class="v" id="regretTotalUsd">$0.00</div>
 
-                <div class="subk" style="margin-top: 10px;">You could’ve gotten instead</div>
+                <div class="subk" style="margin-top: 10px;">You could've gotten instead</div>
                 <div class="list" id="regretList">
-                  <div class="empty" id="regretEmpty">—</div>
+                  <div class="empty" id="regretEmpty">-</div>
                 </div>
               </div>
             </div>
@@ -257,6 +266,6 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
   </body>
 </html>

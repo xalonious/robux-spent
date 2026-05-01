@@ -12,7 +12,7 @@ const {
   computeLeaderboards,
   computeRegretSimulatorFromInflow, 
   constants,
-} = require("./roblox_spend");
+} = require("./roblox");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -147,7 +147,7 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
     const balance = await fetchAllPurchases.getRobuxBalance(cookie, progress);
 
     progress("Scanning Robux inflow…");
-    const { inflow, usdTx } = await computeRobuxFlows(cookie, userId, progress);
+    const { inflow, outflow, usdTx } = await computeRobuxFlows(cookie, userId, progress);
 
     progress("Computing USD spend over time (from Robux/Premium purchases)…");
     const usdMonthly = computeUsdSpendOverTimeFromInflow(usdTx, "month");
@@ -172,6 +172,7 @@ ipcMain.handle("scan-spend", async (event, { cookiePath }) => {
       ...spendTotals,
       balance,
       inflow,
+      outflow,
     };
 
     const series = { monthly, yearly, usdPerRobux: constants.USD_PER_ROBUX };
