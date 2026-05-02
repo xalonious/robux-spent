@@ -93,7 +93,8 @@ els.scanBtn.addEventListener("click", async () => {
   setMetric("robux");
 
   els.statsSection.style.display = "block";
+  requestAnimationFrame(() => drawChart());
   appendLog(`Saved results to: ${res.dataDir}`, { level: "ok" });
 });
 
-drawChart();
+requestAnimationFrame(() => drawChart());

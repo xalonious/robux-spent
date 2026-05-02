@@ -1,271 +1,157 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Robux Spent</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="shell">
-      <div class="panel">
-        <div class="header">
-          <div class="title">
-            <h1>Robux Spent</h1>
-            <p>
-              Pick a <b>cookie.txt</b> containing only your <code>.ROBLOSECURITY</code> value, then scan your purchase
-              history.
-            </p>
-          </div>
-
-          <div class="pill" id="status">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">Ready</span>
-          </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>Robux Spent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <div class="panel">
+      <div class="header">
+        <div class="titleGroup">
+          <h1>Robux Spent</h1>
+          <p>Pick a <b>cookie.txt</b> containing your <code>.ROBLOSECURITY</code> value, then scan.</p>
         </div>
-
-        <div class="body">
-          <div class="label">Cookie file</div>
-          <div class="fileBox">
-            <button id="pick">Select File</button>
-            <div class="fileName" id="fileName">No file selected</div>
-          </div>
-
-          <div class="spacer"></div>
-
-          <button class="primary" id="scan" disabled>Scan Purchases</button>
-
-          <div class="progressWrap" id="progressSection" style="display: none;">
-            <div class="bar"><div class="fill" id="progressFill"></div></div>
-            <div class="progressText">
-              <span id="progressText">Starting...</span>
-              <span class="chip" id="progressChip" style="display: none;">-</span>
-            </div>
-          </div>
-
-          <div id="statsSection" style="display: none;">
-            <div class="label">Robux inflow</div>
-            <div class="grid">
-              <div class="card">
-                <div class="k">Total inflow</div>
-                <div class="v" id="inflowTotal">R$0</div>
-              </div>
-
-              <div class="card">
-                <div class="k">Current balance</div>
-                <div class="v" id="robuxBalance">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Robux bought</div>
-                <div class="v" id="inflowCurrencyPurchase">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Premium stipends</div>
-                <div class="v" id="inflowPremiumStipend">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Engagement payouts</div>
-                <div class="v" id="inflowEngagementPayout">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Group payouts</div>
-                <div class="v" id="inflowGroupPayout">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Sales</div>
-                <div class="v" id="inflowSale">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Trade gains</div>
-                <div class="v" id="inflowTradeRobux">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Transfers received</div>
-                <div class="v" id="inflowRobuxTransfers">R$0</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Est. USD spent on Robux</div>
-                <div class="v" id="usdSpentOnRobux">$0.00</div>
-              </div>
-
-              <div class="card" data-hide-zero>
-                <div class="k">Est. USD spent on Premium</div>
-                <div class="v" id="usdSpentOnPremium">$0.00</div>
-              </div>
-            </div>
-
-            <div class="label">Robux outflow</div>
-            <div class="grid">
-              <div class="card">
-                <div class="k">Total spent</div>
-                <div class="v" id="totalSpent">R$0</div>
-              </div>
-              <div class="card" data-hide-zero>
-                <div class="k">Purchases</div>
-                <div class="v" id="purchaseCount">0</div>
-              </div>
-              <div class="card" data-hide-zero>
-                <div class="k">In games</div>
-                <div class="v" id="gameSpent">R$0</div>
-              </div>
-              <div class="card" data-hide-zero>
-                <div class="k">Other</div>
-                <div class="v" id="otherSpent">R$0</div>
-              </div>
-              <div class="card" data-hide-zero>
-                <div class="k">Transfers sent</div>
-                <div class="v" id="outflowRobuxTransfers">R$0</div>
-              </div>
-            </div>
-
-            <div class="label">Insights</div>
-
-            <div class="grid">
-              <div class="card">
-                <div class="k">Average per month</div>
-                <div class="v" id="avgPerMonth">R$0</div>
-              </div>
-
-              <div class="card">
-                <div class="k">Average per year</div>
-                <div class="v" id="avgPerYear">R$0</div>
-              </div>
-
-              <div class="card">
-                <div class="k">Average per purchase</div>
-                <div class="v" id="avgPerPurchase">R$0</div>
-              </div>
-
-              <div class="card">
-                <div class="k">Peak spending month</div>
-
-                <div class="metaRow">
-                  <span class="badgeMeta" id="peakMonthLabel">-</span>
-                </div>
-
-                <div class="v" id="peakMonthRobux">R$0</div>
-              </div>
-            </div>
-
-            <div class="grid" style="margin-top: 12px;">
-              <div class="card">
-                <div class="k">Top 5 most expensive purchases</div>
-                <div class="list" id="topPurchasesList">
-                  <div class="empty" id="topPurchasesEmpty">-</div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="k">Top 5 games funded</div>
-                <div class="list" id="topGamesList">
-                  <div class="empty" id="topGamesEmpty">-</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="grid" style="margin-top: 12px;">
-              <div class="card">
-                <div class="k">Biggest spending day ever</div>
-
-                <div class="metaRow" style="margin-top: 8px;">
-                  <span class="badgeMeta" id="bigDayLabel">-</span>
-                </div>
-
-                <div class="v" id="bigDayRobux">R$0</div>
-
-                <div class="subk" style="margin-top: 10px;">Top purchases that day</div>
-                <div class="list" id="bigDayTopList">
-                  <div class="empty" id="bigDayTopEmpty">-</div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="k">Regret Simulator</div>
-
-                <div class="metaRow" style="margin-top: 8px;">
-                  <span class="badgeMeta" id="regretMeta">-</span>
-                </div>
-
-                <div class="v" id="regretTotalUsd">$0.00</div>
-
-                <div class="subk" style="margin-top: 10px;">You could've gotten instead</div>
-                <div class="list" id="regretList">
-                  <div class="empty" id="regretEmpty">-</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="label">Spending over time</div>
-
-            <div class="chartPanel" aria-label="Spending over time chart">
-              <div class="chartHeader">
-                <div class="segmented" role="tablist" aria-label="Chart range">
-                  <button class="segBtn" id="granMonth" type="button" aria-selected="true">Monthly</button>
-                  <button class="segBtn" id="granYear" type="button" aria-selected="false">Yearly</button>
-                </div>
-
-                <div class="toggleGroup" aria-label="Metric toggle">
-                  <label class="toggle">
-                    <input type="radio" name="metric" id="metricRobux" value="robux" checked />
-                    <span>Robux</span>
-                  </label>
-                  <label class="toggle">
-                    <input type="radio" name="metric" id="metricUSD" value="usd" />
-                    <span>USD</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="chartWrap">
-                <canvas id="spendChart" width="980" height="320"></canvas>
-
-                <div class="chartEmpty" id="chartEmpty" style="display: none;">
-                  No spend data to chart yet.
-                </div>
-              </div>
-
-              <div class="chartFooter">
-                <div class="chartLegend">
-                  <span class="legendSwatch" aria-hidden="true"></span>
-                  <span id="chartLegendLabel">Robux spent</span>
-                </div>
-                <div class="chartHint" id="chartHint">Tip: hover points for exact values</div>
-              </div>
-            </div>
-          </div>
+        <div class="badge" id="status">
+          <span class="dot idle" id="statusDot"></span>
+          <span id="statusText">Ready</span>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="header">
-          <div class="title">
-            <h1 class="logTitle">Live log</h1>
-            <p>Shows status messages (including rate limits) as they happen.</p>
-          </div>
-          <div class="pill">
-            <span class="dot dotMuted"></span>
-            <span id="logCount">0 lines</span>
+      <div class="body">
+        <div class="sh">Cookie file</div>
+        <div class="fileRow">
+          <button id="pick">Browse</button>
+          <div class="fname" id="fileName">No file selected</div>
+        </div>
+        <div class="spacer"></div>
+        <button class="primary" id="scan" disabled>Scan Purchases</button>
+
+        <div class="progressWrap" id="progressSection" style="display:none">
+          <div class="bar"><div class="fill" id="progressFill"></div></div>
+          <div class="progressMeta">
+            <span id="progressText">Starting…</span>
+            <span class="chip" id="progressChip" style="display:none">—</span>
           </div>
         </div>
+        <div id="statsSection" style="display:none">
 
-        <div class="logBody">
-          <div class="log" id="log"></div>
-          <div class="logFooter">
-            <span id="hint">Log output</span>
-            <span class="linkish" id="clearLog">Clear</span>
+          <div class="sh">Inflow</div>
+          <div class="grid3">
+            <div class="card card-hero"><div class="ck">Total inflow</div><div class="cv" id="inflowTotal">R$0</div></div>
+            <div class="card"><div class="ck">Balance</div><div class="cv" id="robuxBalance">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Robux bought</div><div class="cv" id="inflowCurrencyPurchase">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Premium stipends</div><div class="cv" id="inflowPremiumStipend">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Engagement payouts</div><div class="cv" id="inflowEngagementPayout">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Group payouts</div><div class="cv" id="inflowGroupPayout">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Sales</div><div class="cv" id="inflowSale">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Trade gains</div><div class="cv" id="inflowTradeRobux">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Transfers in</div><div class="cv" id="inflowRobuxTransfers">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Est. USD on Robux</div><div class="cv" id="usdSpentOnRobux">$0.00</div></div>
+            <div class="card" data-hide-zero><div class="ck">Est. USD on Premium</div><div class="cv" id="usdSpentOnPremium">$0.00</div></div>
           </div>
+
+          <div class="sh">Outflow</div>
+          <div class="grid3">
+            <div class="card card-hero"><div class="ck">Total spent</div><div class="cv" id="totalSpent">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Purchases</div><div class="cv" id="purchaseCount">0</div></div>
+            <div class="card" data-hide-zero><div class="ck">In games</div><div class="cv" id="gameSpent">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Other</div><div class="cv" id="otherSpent">R$0</div></div>
+            <div class="card" data-hide-zero><div class="ck">Transfers out</div><div class="cv" id="outflowRobuxTransfers">R$0</div></div>
+          </div>
+
+          <div class="sh">Insights</div>
+          <div class="grid3">
+            <div class="card"><div class="ck">Avg / month</div><div class="cv" id="avgPerMonth">R$0</div></div>
+            <div class="card"><div class="ck">Avg / year</div><div class="cv" id="avgPerYear">R$0</div></div>
+            <div class="card"><div class="ck">Avg / purchase</div><div class="cv" id="avgPerPurchase">R$0</div></div>
+            <div class="card">
+              <div class="ck">Peak month</div>
+              <div class="cmeta" id="peakMonthLabel">—</div>
+              <div class="cv" id="peakMonthRobux">R$0</div>
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:7px">
+            <div class="card">
+              <div class="ck">Top 5 most expensive</div>
+              <div class="list" id="topPurchasesList"><div class="empty" id="topPurchasesEmpty">—</div></div>
+            </div>
+            <div class="card">
+              <div class="ck">Top 5 games funded</div>
+              <div class="list" id="topGamesList"><div class="empty" id="topGamesEmpty">—</div></div>
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:7px">
+            <div class="card">
+              <div class="ck">Biggest day</div>
+              <div class="cmeta" id="bigDayLabel">—</div>
+              <div class="cv" id="bigDayRobux">R$0</div>
+              <div class="subsh">Top purchases that day</div>
+              <div class="list" id="bigDayTopList"><div class="empty" id="bigDayTopEmpty">—</div></div>
+            </div>
+            <div class="card">
+              <div class="ck">Regret simulator</div>
+              <div class="cmeta" id="regretMeta">—</div>
+              <div class="cv" id="regretTotalUsd">$0.00</div>
+              <div class="subsh">Could've bought instead</div>
+              <div class="list" id="regretList"><div class="empty" id="regretEmpty">—</div></div>
+            </div>
+          </div>
+          <div class="sh">Spending over time</div>
+          <div class="chartWrap">
+            <div class="chartTop">
+              <div class="seg" role="tablist">
+                <button class="segBtn" id="granMonth" type="button" aria-selected="true">Monthly</button>
+                <button class="segBtn" id="granYear"  type="button" aria-selected="false">Yearly</button>
+              </div>
+              <div class="metricGroup">
+                <label class="mtoggle"><input type="radio" name="metric" id="metricRobux" value="robux" checked /><span>R$</span></label>
+                <label class="mtoggle"><input type="radio" name="metric" id="metricUSD"   value="usd"   /><span>USD</span></label>
+              </div>
+            </div>
+            <div class="canvasBox">
+              <canvas id="spendChart" width="900" height="240"></canvas>
+              <div class="chartEmpty" id="chartEmpty" style="display:none">No data yet</div>
+            </div>
+            <div class="chartFoot">
+              <div class="legend">
+                <span class="lswatch"></span>
+                <span id="chartLegendLabel">Robux spent</span>
+              </div>
+              <span id="chartHint">Hover for values</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="header">
+        <div class="titleGroup">
+          <h1>Live log</h1>
+          <p>Status &amp; rate-limit messages</p>
+        </div>
+        <div class="badge">
+          <span class="dot idle"></span>
+          <span id="logCount">0 lines</span>
+        </div>
+      </div>
+      <div class="logBody">
+        <div class="logScroll" id="log"></div>
+        <div class="logFoot">
+          <span id="hint">Output</span>
+          <span class="ghost" id="clearLog">Clear</span>
         </div>
       </div>
     </div>
 
-    <script type="module" src="script.js"></script>
-  </body>
+  </div>
+  <script type="module" src="script.js"></script>
+</body>
 </html>

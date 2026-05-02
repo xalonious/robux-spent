@@ -14,7 +14,7 @@ export function appendLog(msg, meta = {}, ts = Date.now()) {
   const ss = String(t.getSeconds()).padStart(2, "0");
 
   const line = document.createElement("div");
-  line.className = "logLine";
+  line.className = "ll";
 
   const lvl = (meta.level || "").toLowerCase();
   if (lvl) line.classList.add(lvl);
