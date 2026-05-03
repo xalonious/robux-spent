@@ -82,6 +82,7 @@ function friendlyKind(rawLabel) {
   if (l === "sale") return { noun: "sale", chip: "Sales" };
   if (l === "traderobux") return { noun: "trade", chip: "Trades" };
   if (l === "currencytransfer") return { noun: "robux transfer", chip: "Transfers" };
+  if (l === "devex") return { noun: "DevEx conversion", chip: "DevEx" };
 
   if (l.includes("premium")) return { noun: "premium transaction", chip: "Premium" };
   if (l.includes("currency") || l.includes("robux")) return { noun: "robux transaction", chip: "Robux" };
@@ -196,6 +197,14 @@ export function handleProgress({ msg, meta, ts }) {
         hardClearRateLimit();
         setStatus("Scanning...", "working");
         setProgress(98, "Fetching inflow transactions...", "inflow", "good");
+      },
+    },
+    {
+      re: /Fetching outflow:/i,
+      run: () => {
+        hardClearRateLimit();
+        setStatus("Scanning...", "working");
+        setProgress(98, "Fetching outflow transactions...", "outflow", "good");
       },
     },
     {

@@ -11,6 +11,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     Sale: "Sale",
     TradeRobux: "TradeRobux",
     CurrencyTransfer: "CurrencyTransfer",
+    DevEx: "DevEx",
     Purchase: "Purchase",
   };
 
@@ -22,6 +23,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     ["Sale", "Sales"],
     ["TradeRobux", "Trade gains"],
     ["CurrencyTransfer", "Currency transfers"],
+    ["DevEx", "DevEx"],
   ];
 
   const inflow = {
@@ -38,7 +40,8 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
   const usdTx = [];
 
   for (const [key, label, options = {}] of inflowOrder) {
-    progress(`Fetching inflow: ${label} (${TYPES[key]})...`, { level: "muted", kind: "inflow" });
+    const flowKind = key === "DevEx" ? "outflow" : "inflow";
+    progress(`Fetching ${flowKind}: ${label} (${TYPES[key]})...`, { level: "muted", kind: flowKind });
 
     let tx = [];
 
@@ -65,7 +68,9 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
 
     const robux = sumRobux(tx, { mode: "positiveOnly" });
     const sentRobux =
-      key === "CurrencyTransfer" || key === "TradeRobux" ? sumRobux(tx, { mode: "negativeOnlyAbs" }) : 0;
+      key === "CurrencyTransfer" || key === "TradeRobux" || key === "DevEx"
+        ? sumRobux(tx, { mode: "negativeOnlyAbs" })
+        : 0;
     const inflowTransactionCount =
       key === "CurrencyTransfer"
         ? tx.filter((t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) > 0).length
@@ -99,6 +104,20 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
       outflow.breakdown[key] = {
         transactionType: TYPES[key],
         label: "Currency transfers sent",
+        robux: sentRobux,
+        usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
+        transactionCount: tx.filter(
+          (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
+        ).length,
+      };
+
+      outflow.totalRobux += sentRobux;
+    }
+
+    if (key === "DevEx") {
+      outflow.breakdown[key] = {
+        transactionType: TYPES[key],
+        label: "Converted via DevEx",
         robux: sentRobux,
         usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
         transactionCount: tx.filter(

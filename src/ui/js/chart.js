@@ -36,7 +36,6 @@ function lbl(p) {
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const r = els.canvas.getBoundingClientRect();
-  // Fall back to offsetWidth when element has no layout yet (e.g. hidden parent)
   const w = Math.max(1, Math.floor(r.width  || els.canvas.offsetWidth  || els.canvas.parentElement?.offsetWidth  || 900));
   const h = Math.max(1, Math.floor(r.height || els.canvas.offsetHeight || els.canvas.parentElement?.offsetHeight || 240));
   const tw = Math.floor(w * dpr);
@@ -61,7 +60,6 @@ export function drawChart() {
 
   const PAD = { t: 10, r: 12, b: 30, l: 0 };
 
-  // measure y-axis labels
   const vmax = Math.max(...s.map(val), 0) * 1.1 || 1;
   const TICKS = 4;
   ctx.save();
@@ -89,7 +87,6 @@ export function drawChart() {
 
   ctx.save();
 
-  // grid
   for (let i = 0; i <= TICKS; i++) {
     const y = PAD.t + (i / TICKS) * ph;
     ctx.strokeStyle = C.grid;
@@ -100,7 +97,6 @@ export function drawChart() {
     ctx.stroke();
   }
 
-  // y labels
   ctx.fillStyle = C.label;
   ctx.font = `11px 'Geist Mono', ui-monospace, monospace`;
   ctx.textAlign = "right";
@@ -114,7 +110,6 @@ export function drawChart() {
     ctx.fillText(txt, PAD.l - 7, y);
   }
 
-  // area fill
   const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + ph);
   grad.addColorStop(0, C.fill0);
   grad.addColorStop(1, C.fill1);
@@ -126,7 +121,6 @@ export function drawChart() {
   ctx.closePath();
   ctx.fill();
 
-  // line
   ctx.strokeStyle = C.line;
   ctx.lineWidth = 1.5;
   ctx.lineJoin = "round";
@@ -135,7 +129,6 @@ export function drawChart() {
   pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
   ctx.stroke();
 
-  // dots
   pts.forEach(p => {
     ctx.fillStyle = C.dot;
     ctx.beginPath();
@@ -143,11 +136,9 @@ export function drawChart() {
     ctx.fill();
   });
 
-  // hover
   if (state.hoverIndex >= 0 && state.hoverIndex < pts.length) {
     const p = pts[state.hoverIndex];
 
-    // crosshair
     ctx.strokeStyle = C.cross;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -155,7 +146,6 @@ export function drawChart() {
     ctx.lineTo(p.x, PAD.t + ph);
     ctx.stroke();
 
-    // dot ring
     ctx.strokeStyle = C.line;
     ctx.lineWidth = 1.5;
     ctx.fillStyle = "#161513";
@@ -164,7 +154,6 @@ export function drawChart() {
     ctx.fill();
     ctx.stroke();
 
-    // tooltip
     const sr = s[state.hoverIndex];
     const vStr = state.chartMetric === "usd" ? fmtUSD(p.v) : fmtRobux(p.v);
     const label = lbl(sr);
@@ -203,7 +192,6 @@ export function drawChart() {
     els.chartHint.textContent = "Hover for values";
   }
 
-  // x labels
   ctx.fillStyle = C.label;
   ctx.font = `11px 'Geist Mono', monospace`;
   ctx.textAlign = "center";

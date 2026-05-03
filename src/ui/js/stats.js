@@ -38,6 +38,7 @@ export function showStats(totals, purchaseCount) {
   const getOutR = (k) => outB?.[k]?.robux ?? 0;
   setCardValue("outflowTradeRobux", fmtRobux(getOutR("TradeRobux")), getOutR("TradeRobux"));
   setCardValue("outflowRobuxTransfers", fmtRobux(getOutR("CurrencyTransfer")), getOutR("CurrencyTransfer"));
+  setCardValue("outflowDevEx", fmtRobux(getOutR("DevEx")), getOutR("DevEx"));
 
   updateZeroCardVisibility();
 }
