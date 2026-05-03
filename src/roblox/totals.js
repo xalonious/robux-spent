@@ -29,6 +29,36 @@ function isGameLinkedPurchase(tx) {
   );
 }
 
+const GAME_PURCHASE_TYPES = new Set(["DeveloperProduct", "GamePass", "PrivateServer"]);
+const AVATAR_PURCHASE_TYPES = new Set(["Asset", "Bundle"]);
+const GROUP_ROBLOX_PRODUCT_NAMES = new Set(["Group", "GroupRoleSet"]);
+
+function detailsTypeForTx(tx) {
+  const type = tx?.details?.type;
+  return typeof type === "string" && type.trim() ? type.trim() : "Unknown";
+}
+
+function detailsNameForTx(tx) {
+  const name = tx?.details?.name;
+  return typeof name === "string" && name.trim() ? name.trim() : "Unknown";
+}
+
+function getTypeSummary(breakdown, type) {
+  return breakdown[type] || { robux: 0, purchaseCount: 0 };
+}
+
+function sumTypeRobux(breakdown, types) {
+  let total = 0;
+  for (const type of types) total += getTypeSummary(breakdown, type).robux;
+  return total;
+}
+
+function sumNameRobux(breakdown, names) {
+  let total = 0;
+  for (const name of names) total += getTypeSummary(breakdown, name).robux;
+  return total;
+}
+
 function spendForTx(tx) {
   if (tx?.currency?.type !== "Robux") return 0;
   const amt = Number(tx.currency?.amount ?? 0) || 0;
@@ -46,9 +76,8 @@ function txDateUTCKey(created) {
 
 function computeTotals(purchases) {
   let totalSpentAllPurchases = 0;
-  let totalSpentInGames = 0;
-  let gameLinkedPurchaseCount = 0;
-  let nonGamePurchaseCount = 0;
+  const purchaseTypeBreakdown = {};
+  const robloxProductBreakdown = {};
 
   for (const tx of purchases) {
     if (tx?.currency?.type !== "Robux") continue;
@@ -56,27 +85,48 @@ function computeTotals(purchases) {
     const spent = spendForTx(tx);
     totalSpentAllPurchases += spent;
 
-    const isGameLinked = isGameLinkedPurchase(tx);
+    const detailsType = detailsTypeForTx(tx);
+    const typeSummary = getTypeSummary(purchaseTypeBreakdown, detailsType);
+    typeSummary.robux += spent;
+    typeSummary.purchaseCount += 1;
+    purchaseTypeBreakdown[detailsType] = typeSummary;
 
-    if (isGameLinked) {
-      totalSpentInGames += spent;
-      gameLinkedPurchaseCount++;
-    } else {
-      nonGamePurchaseCount++;
+    if (detailsType === "RobloxProduct") {
+      const detailsName = detailsNameForTx(tx);
+      const productSummary = getTypeSummary(robloxProductBreakdown, detailsName);
+      productSummary.robux += spent;
+      productSummary.purchaseCount += 1;
+      robloxProductBreakdown[detailsName] = productSummary;
     }
   }
+
+  const totalSpentInGames = sumTypeRobux(purchaseTypeBreakdown, GAME_PURCHASE_TYPES);
+  const totalSpentOnAvatarItems = sumTypeRobux(purchaseTypeBreakdown, AVATAR_PURCHASE_TYPES);
+  const totalSpentOnDeveloperProducts = getTypeSummary(purchaseTypeBreakdown, "DeveloperProduct").robux;
+  const totalSpentOnGamePasses = getTypeSummary(purchaseTypeBreakdown, "GamePass").robux;
+  const totalSpentOnPrivateServers = getTypeSummary(purchaseTypeBreakdown, "PrivateServer").robux;
+  const totalSpentOnUsernameChanges = getTypeSummary(robloxProductBreakdown, "Username Change").robux;
+  const totalSpentOnGroupRanks = sumNameRobux(robloxProductBreakdown, GROUP_ROBLOX_PRODUCT_NAMES);
 
   return {
     totalSpentAllPurchases,
     totalSpentInGames,
+    totalSpentOnAvatarItems,
+    totalSpentOnDeveloperProducts,
+    totalSpentOnGamePasses,
+    totalSpentOnPrivateServers,
+    totalSpentOnUsernameChanges,
+    totalSpentOnGroupRanks,
     totalSpentOutsideGames: totalSpentAllPurchases - totalSpentInGames,
-    gameLinkedPurchaseCount,
-    nonGamePurchaseCount,
+    purchaseTypeBreakdown,
+    robloxProductBreakdown,
   };
 }
 
 exports.sumRobux = sumRobux;
 exports.isGameLinkedPurchase = isGameLinkedPurchase;
+exports.detailsTypeForTx = detailsTypeForTx;
+exports.detailsNameForTx = detailsNameForTx;
 exports.spendForTx = spendForTx;
 exports.txDateUTCKey = txDateUTCKey;
 exports.computeTotals = computeTotals;

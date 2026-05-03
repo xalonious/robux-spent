@@ -5,7 +5,12 @@ export function showStats(totals, purchaseCount) {
   setCardValue("totalSpent", fmtRobux(totals.totalSpentAllPurchases), totals.totalSpentAllPurchases);
   setCardValue("purchaseCount", fmt(purchaseCount), purchaseCount);
   setCardValue("gameSpent", fmtRobux(totals.totalSpentInGames), totals.totalSpentInGames);
-  setCardValue("otherSpent", fmtRobux(totals.totalSpentOutsideGames), totals.totalSpentOutsideGames);
+  setCardValue("avatarSpent", fmtRobux(totals.totalSpentOnAvatarItems), totals.totalSpentOnAvatarItems);
+  setCardValue("devProductsSpent", fmtRobux(totals.totalSpentOnDeveloperProducts), totals.totalSpentOnDeveloperProducts);
+  setCardValue("gamePassesSpent", fmtRobux(totals.totalSpentOnGamePasses), totals.totalSpentOnGamePasses);
+  setCardValue("privateServersSpent", fmtRobux(totals.totalSpentOnPrivateServers), totals.totalSpentOnPrivateServers);
+  setCardValue("usernameChangesSpent", fmtRobux(totals.totalSpentOnUsernameChanges), totals.totalSpentOnUsernameChanges);
+  setCardValue("groupRanksSpent", fmtRobux(totals.totalSpentOnGroupRanks), totals.totalSpentOnGroupRanks);
 
   const bal = totals.balance || {};
   setCardValue("robuxBalance", fmtRobux(bal.robux ?? 0), bal.robux ?? 0);
@@ -31,6 +36,7 @@ export function showStats(totals, purchaseCount) {
   const outflow = totals.outflow || {};
   const outB = outflow.breakdown || {};
   const getOutR = (k) => outB?.[k]?.robux ?? 0;
+  setCardValue("outflowTradeRobux", fmtRobux(getOutR("TradeRobux")), getOutR("TradeRobux"));
   setCardValue("outflowRobuxTransfers", fmtRobux(getOutR("CurrencyTransfer")), getOutR("CurrencyTransfer"));
 
   updateZeroCardVisibility();

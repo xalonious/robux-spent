@@ -64,7 +64,8 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     }
 
     const robux = sumRobux(tx, { mode: "positiveOnly" });
-    const sentRobux = key === "CurrencyTransfer" ? sumRobux(tx, { mode: "negativeOnlyAbs" }) : 0;
+    const sentRobux =
+      key === "CurrencyTransfer" || key === "TradeRobux" ? sumRobux(tx, { mode: "negativeOnlyAbs" }) : 0;
     const inflowTransactionCount =
       key === "CurrencyTransfer"
         ? tx.filter((t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) > 0).length
@@ -79,6 +80,20 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     };
 
     inflow.totalRobux += robux;
+
+    if (key === "TradeRobux") {
+      outflow.breakdown[key] = {
+        transactionType: TYPES[key],
+        label: "Trade losses",
+        robux: sentRobux,
+        usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
+        transactionCount: tx.filter(
+          (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
+        ).length,
+      };
+
+      outflow.totalRobux += sentRobux;
+    }
 
     if (key === "CurrencyTransfer") {
       outflow.breakdown[key] = {

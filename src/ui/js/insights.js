@@ -3,6 +3,10 @@ import { els, clearEl, makeRow } from "./dom.js";
 import { showLeaderboards } from "./lists.js";
 import { fmt, fmtRobux, fmtUSD, periodToPretty } from "./format.js";
 
+function fmtInsightRobux(n) {
+  return fmtRobux(Math.round(Number(n) || 0));
+}
+
 export function showRegretSimulatorFromTotals(totals) {
   if (!els.regretTotalUsdEl || !els.regretListEl || !els.regretEmptyEl) return;
 
@@ -70,9 +74,9 @@ export function showInsights(ins) {
   state.insights = ins || null;
 
   const avg = ins?.averages || {};
-  els.avgPerMonthEl.textContent = fmtRobux(avg.robuxPerMonth ?? 0);
-  els.avgPerYearEl.textContent = fmtRobux(avg.robuxPerYear ?? 0);
-  els.avgPerPurchaseEl.textContent = fmtRobux(avg.robuxPerPurchase ?? 0);
+  els.avgPerMonthEl.textContent = fmtInsightRobux(avg.robuxPerMonth ?? 0);
+  els.avgPerYearEl.textContent = fmtInsightRobux(avg.robuxPerYear ?? 0);
+  els.avgPerPurchaseEl.textContent = fmtInsightRobux(avg.robuxPerPurchase ?? 0);
 
   const peak = ins?.peakMonth || null;
   if (!peak) {
@@ -82,7 +86,7 @@ export function showInsights(ins) {
     els.peakMonthLabelEl.textContent = `${periodToPretty(peak.period)} - ${fmt(peak.purchaseCount)} purchase${
       peak.purchaseCount === 1 ? "" : "s"
     }`;
-    els.peakMonthRobuxEl.textContent = fmtRobux(peak.robux ?? 0);
+    els.peakMonthRobuxEl.textContent = fmtInsightRobux(peak.robux ?? 0);
   }
 
   showLeaderboards(ins);
