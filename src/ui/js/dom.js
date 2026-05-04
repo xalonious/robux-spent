@@ -69,6 +69,27 @@ export function setCardValue(id, text, rawValue) {
   el.dataset.rawValue = String(Number(rawValue ?? 0) || 0);
 }
 
+export function setCardIncomplete(id, incomplete, note = "Incomplete data") {
+  const valueEl = document.getElementById(id);
+  const card = valueEl?.closest(".card");
+  if (!card) return;
+
+  let noteEl = card.querySelector(".cardIncomplete");
+  if (!incomplete) {
+    card.dataset.incomplete = "false";
+    noteEl?.remove();
+    return;
+  }
+
+  card.dataset.incomplete = "true";
+  if (!noteEl) {
+    noteEl = document.createElement("div");
+    noteEl.className = "cardIncomplete";
+    valueEl.insertAdjacentElement("afterend", noteEl);
+  }
+  noteEl.textContent = note;
+}
+
 export function updateZeroCardVisibility() {
   els.statsSection.querySelectorAll(".card[data-hide-zero]").forEach(card => {
     const valueEl = card.querySelector(".cv");

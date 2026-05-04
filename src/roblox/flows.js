@@ -29,6 +29,14 @@ function isCompletedDevEx(tx) {
   return /\b(completed|complete|paid|processed|succeeded|success|approved)\b/i.test(status);
 }
 
+function applyScanMeta(card, tx) {
+  const meta = tx?.scanMeta;
+  if (!meta?.incomplete) return card;
+  card.incomplete = true;
+  card.incompleteReason = meta.reason;
+  return card;
+}
+
 async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
   const TYPES = {
     CurrencyPurchase: "CurrencyPurchase",
@@ -114,19 +122,19 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         : tx.length;
 
     if (key !== "DevEx") {
-      inflow.breakdown[key] = {
+      inflow.breakdown[key] = applyScanMeta({
         transactionType: TYPES[key],
         label,
         robux,
         usdEstimate: Math.round(robux * USD_PER_ROBUX * 100) / 100,
         transactionCount: inflowTransactionCount,
-      };
+      }, tx);
 
       inflow.totalRobux += robux;
     }
 
     if (key === "TradeRobux") {
-      outflow.breakdown[key] = {
+      outflow.breakdown[key] = applyScanMeta({
         transactionType: TYPES[key],
         label: "Trade losses",
         robux: sentRobux,
@@ -134,13 +142,13 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
-      };
+      }, tx);
 
       outflow.totalRobux += sentRobux;
     }
 
     if (key === "CurrencyTransfer") {
-      outflow.breakdown[key] = {
+      outflow.breakdown[key] = applyScanMeta({
         transactionType: TYPES[key],
         label: "Currency transfers sent",
         robux: sentRobux,
@@ -148,13 +156,13 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
-      };
+      }, tx);
 
       outflow.totalRobux += sentRobux;
     }
 
     if (key === "DevEx") {
-      outflow.breakdown[key] = {
+      outflow.breakdown[key] = applyScanMeta({
         transactionType: TYPES[key],
         label: "Converted via DevEx",
         robux: sentRobux,
@@ -162,7 +170,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
-      };
+      }, tx);
 
       outflow.totalRobux += sentRobux;
     }
@@ -170,6 +178,8 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
 
   inflow.usdEstimate = Math.round(inflow.totalRobux * USD_PER_ROBUX * 100) / 100;
   outflow.usdEstimate = Math.round(outflow.totalRobux * USD_PER_ROBUX * 100) / 100;
+  inflow.incomplete = Object.values(inflow.breakdown).some((card) => card?.incomplete);
+  outflow.incomplete = Object.values(outflow.breakdown).some((card) => card?.incomplete);
 
   return { inflow, outflow, usdTx };
 }

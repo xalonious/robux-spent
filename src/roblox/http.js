@@ -4,6 +4,12 @@ function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
 
+function errorMessage(error) {
+  const message = error?.message ?? String(error);
+  const code = error?.code ?? error?.cause?.code;
+  return code ? `${message} (${code})` : message;
+}
+
 async function fetchWithRetry(
   url,
   init,
@@ -20,7 +26,25 @@ async function fetchWithRetry(
   let last429At = 0;
 
   while (true) {
-    const res = await fetch(url, init);
+    let res;
+
+    try {
+      res = await fetch(url, init);
+    } catch (e) {
+      if (attempt >= maxRetries) throw e;
+
+      const delayMs = clamp(baseDelayMs * 1.8 ** attempt + Math.floor(Math.random() * 700), baseDelayMs, maxDelayMs);
+      onLog?.(`Network error: ${errorMessage(e)}. Retrying in ${delayMs} ms...`, {
+        level: "warn",
+        kind: "retry",
+        delayMs,
+        error: errorMessage(e),
+      });
+
+      await sleep(delayMs);
+      attempt++;
+      continue;
+    }
 
     if (res.ok) return res;
 

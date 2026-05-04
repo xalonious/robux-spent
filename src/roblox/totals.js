@@ -75,6 +75,8 @@ function txDateUTCKey(created) {
 }
 
 function computeTotals(purchases) {
+  const scanMeta = purchases?.scanMeta || null;
+  const incomplete = Boolean(scanMeta?.incomplete);
   let totalSpentAllPurchases = 0;
   const purchaseTypeBreakdown = {};
   const robloxProductBreakdown = {};
@@ -118,6 +120,8 @@ function computeTotals(purchases) {
     totalSpentOnUsernameChanges,
     totalSpentOnGroupRanks,
     totalSpentOutsideGames: totalSpentAllPurchases - totalSpentInGames,
+    incomplete,
+    incompleteReason: scanMeta?.reason || null,
     purchaseTypeBreakdown,
     robloxProductBreakdown,
   };
