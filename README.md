@@ -12,7 +12,7 @@ Built with Electron and plain JavaScript.
 - Cookie validation before scanning
 - Automatic rate-limit retry handling
 - Robux inflow breakdowns for purchases, stipends, payouts, sales, transfers, and trade gains
-- Robux outflow breakdowns for game spending, avatar items, developer products, gamepasses, private servers, username changes, group ranks, trades, and transfers
+- Robux outflow breakdowns for game spending, avatar items, developer products, gamepasses, private servers, username changes, group ranks, trades, transfers, and DevEx conversions
 - Spending insights for monthly averages, yearly averages, average purchase size, and peak spending month
 - Leaderboards for most expensive purchases, top funded games, and biggest spending day
 - Monthly and yearly spending chart with Robux and USD views
