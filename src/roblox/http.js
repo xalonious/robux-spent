@@ -12,6 +12,7 @@ async function fetchWithRetry(
     baseDelayMs = 1500,
     maxDelayMs = 30_000,
     retryStatuses = new Set([429, 500, 502, 503, 504]),
+    maxRetriesByStatus = {},
     onLog = null,
   } = {}
 ) {
@@ -26,8 +27,9 @@ async function fetchWithRetry(
     const status = res.status;
     const text = await res.text().catch(() => "");
     const preview = text.slice(0, 160);
+    const statusMaxRetries = maxRetriesByStatus[status] ?? maxRetries;
 
-    if (!retryStatuses.has(status) || attempt >= maxRetries) {
+    if (!retryStatuses.has(status) || attempt >= statusMaxRetries) {
       throw new Error(`HTTP ${status}: ${text.slice(0, 600)}`);
     }
 

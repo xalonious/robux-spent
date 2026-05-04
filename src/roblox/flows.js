@@ -2,6 +2,33 @@ const { USD_PER_ROBUX } = require("./constants");
 const { fetchTransactionsByTypeAllTime } = require("./transactions");
 const { sumRobux } = require("./totals");
 
+function statusText(tx) {
+  return [
+    tx?.status,
+    tx?.state,
+    tx?.transactionStatus,
+    tx?.details?.status,
+    tx?.details?.state,
+    tx?.details?.transactionStatus,
+  ]
+    .filter((v) => v != null)
+    .map((v) => String(v).trim().toLowerCase())
+    .filter(Boolean)
+    .join(" ");
+}
+
+function isCanceledOrFailedDevEx(tx) {
+  const status = statusText(tx);
+  return /\b(cancelled|canceled|declined|denied|rejected|failed|expired|voided|refunded)\b/i.test(status);
+}
+
+function isCompletedDevEx(tx) {
+  const status = statusText(tx);
+  if (!status) return true;
+  if (isCanceledOrFailedDevEx(tx)) return false;
+  return /\b(completed|complete|paid|processed|succeeded|success|approved)\b/i.test(status);
+}
+
 async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
   const TYPES = {
     CurrencyPurchase: "CurrencyPurchase",
@@ -15,15 +42,15 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     Purchase: "Purchase",
   };
 
-  const inflowOrder = [
-    ["CurrencyPurchase", "Robux bought (money)"],
-    ["PremiumStipend", "Premium stipend"],
-    ["EngagementPayout", "Engagement payout"],
-    ["GroupPayout", "Group payout"],
-    ["Sale", "Sales"],
-    ["TradeRobux", "Trade gains"],
-    ["CurrencyTransfer", "Currency transfers"],
-    ["DevEx", "DevEx"],
+  const flowDefinitions = [
+    { key: "CurrencyPurchase", label: "Robux bought (money)", flowKind: "inflow" },
+    { key: "PremiumStipend", label: "Premium stipend", flowKind: "inflow" },
+    { key: "EngagementPayout", label: "Engagement payout", flowKind: "inflow" },
+    { key: "GroupPayout", label: "Group payout", flowKind: "inflow" },
+    { key: "Sale", label: "Sales", flowKind: "inflow" },
+    { key: "TradeRobux", label: "Trades", flowKind: "both" },
+    { key: "CurrencyTransfer", label: "Currency transfers", flowKind: "both" },
+    { key: "DevEx", label: "DevEx", flowKind: "outflow" },
   ];
 
   const inflow = {
@@ -39,9 +66,9 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
 
   const usdTx = [];
 
-  for (const [key, label, options = {}] of inflowOrder) {
-    const flowKind = key === "DevEx" ? "outflow" : "inflow";
-    progress(`Fetching ${flowKind}: ${label} (${TYPES[key]})...`, { level: "muted", kind: flowKind });
+  for (const { key, label, flowKind, optional = false } of flowDefinitions) {
+    const progressKind = flowKind === "both" ? "inflow/outflow" : flowKind;
+    progress(`Fetching ${progressKind}: ${label} (${TYPES[key]})...`, { level: "muted", kind: flowKind });
 
     let tx = [];
 
@@ -52,13 +79,13 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
     } catch (e) {
       const message = e?.message ?? String(e);
 
-      if (!options.optional || !/HTTP 400:/i.test(message) || !/transactionType/i.test(message)) {
+      if (!optional || !/HTTP 400:/i.test(message) || !/transactionType/i.test(message)) {
         throw e;
       }
 
-      progress(`Skipping inflow: ${label} (${TYPES[key]}) is not supported by Roblox API.`, {
+      progress(`Skipping ${progressKind}: ${label} (${TYPES[key]}) is not supported by Roblox API.`, {
         level: "muted",
-        kind: "inflow",
+        kind: flowKind,
       });
     }
 
@@ -66,25 +93,37 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
       usdTx.push(...tx);
     }
 
-    const robux = sumRobux(tx, { mode: "positiveOnly" });
+    const effectiveTx = key === "DevEx" ? tx.filter(isCompletedDevEx) : tx;
+    const skippedTx = tx.length - effectiveTx.length;
+
+    if (key === "DevEx" && skippedTx > 0) {
+      progress(`Ignored ${skippedTx.toLocaleString()} canceled/rejected DevEx tx.`, {
+        level: "muted",
+        kind: "outflow",
+      });
+    }
+
+    const robux = key === "DevEx" ? 0 : sumRobux(effectiveTx, { mode: "positiveOnly" });
     const sentRobux =
       key === "CurrencyTransfer" || key === "TradeRobux" || key === "DevEx"
-        ? sumRobux(tx, { mode: "negativeOnlyAbs" })
+        ? sumRobux(effectiveTx, { mode: "negativeOnlyAbs" })
         : 0;
     const inflowTransactionCount =
       key === "CurrencyTransfer"
-        ? tx.filter((t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) > 0).length
+        ? effectiveTx.filter((t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) > 0).length
         : tx.length;
 
-    inflow.breakdown[key] = {
-      transactionType: TYPES[key],
-      label,
-      robux,
-      usdEstimate: Math.round(robux * USD_PER_ROBUX * 100) / 100,
-      transactionCount: inflowTransactionCount,
-    };
+    if (key !== "DevEx") {
+      inflow.breakdown[key] = {
+        transactionType: TYPES[key],
+        label,
+        robux,
+        usdEstimate: Math.round(robux * USD_PER_ROBUX * 100) / 100,
+        transactionCount: inflowTransactionCount,
+      };
 
-    inflow.totalRobux += robux;
+      inflow.totalRobux += robux;
+    }
 
     if (key === "TradeRobux") {
       outflow.breakdown[key] = {
@@ -92,7 +131,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         label: "Trade losses",
         robux: sentRobux,
         usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
-        transactionCount: tx.filter(
+        transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
       };
@@ -106,7 +145,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         label: "Currency transfers sent",
         robux: sentRobux,
         usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
-        transactionCount: tx.filter(
+        transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
       };
@@ -120,7 +159,7 @@ async function computeRobuxFlows(roblosec, userId, progress = () => {}) {
         label: "Converted via DevEx",
         robux: sentRobux,
         usdEstimate: Math.round(sentRobux * USD_PER_ROBUX * 100) / 100,
-        transactionCount: tx.filter(
+        transactionCount: effectiveTx.filter(
           (t) => t?.currency?.type === "Robux" && Number(t.currency?.amount ?? 0) < 0
         ).length,
       };
